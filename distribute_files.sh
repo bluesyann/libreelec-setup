@@ -3,8 +3,7 @@
 set -eu
 
 DESTINATION="/storage/.config"
-SECRETS_DEST_DIR="$DESTINATION/secrets"
-DB_BACKUP="/media/sda1-usb-OTi2168_Flash_Di/db-backup"
+DB_BACKUP="/var/media/Kodi_Storage/db-backup"
 AUTOSTART_MODE="${1:---no-autostart}"
 
 FOLDERS="
@@ -62,15 +61,6 @@ case "$AUTOSTART_MODE" in
 esac
 copy_required_file "docker-compose.yml" "$DESTINATION/docker-compose.yml"
 copy_required_file "README.md" "$DESTINATION/README.md"
-
-echo "Copying secrets template"
-mkdir -p "$SECRETS_DEST_DIR"
-copy_required_file "secrets/libreelec.env.example" "$SECRETS_DEST_DIR/libreelec.env.example"
-
-if [ ! -f "$SECRETS_DEST_DIR/libreelec.env" ]; then
-    cp "$SECRETS_DEST_DIR/libreelec.env.example" "$SECRETS_DEST_DIR/libreelec.env"
-    echo "Created $SECRETS_DEST_DIR/libreelec.env from template"
-fi
 
 if [ -d "$DB_BACKUP" ]; then
     echo "Copying database backups from $DB_BACKUP"

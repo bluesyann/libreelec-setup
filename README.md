@@ -36,9 +36,9 @@ This setup orchestrates:
 
 Secrets are not stored in tracked files.
 
-1. Deploy files with `run_install.sh` (or `distribute_files.sh`).
-2. Edit `/storage/.config/secrets/libreelec.env` (created from template if missing).
-3. Fill all `replace_me` values.
+1. Create `/var/media/Kodi_Storage/secrets/libreelec.env` with all required values (see `secrets/libreelec.env.example`).
+2. Run `./run_install.sh` — it copies the file to `/storage/.config/secrets/libreelec.env` as first step.
+3. All runtime scripts and docker-compose read from `/storage/.config/secrets/libreelec.env` so the system starts normally even if the HDD is offline.
 
 Main variables used by scripts/compose:
 

@@ -4,7 +4,9 @@ set -eu
 
 MODE="${1:-all}"
 DEPLOY_COMPOSE_FILE="/storage/.config/docker-compose.yml"
+HDD_SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
 DEPLOY_SECRETS_FILE="/storage/.config/secrets/libreelec.env"
+
 
 compose_bin() {
 	if [ -x "/storage/compose/docker-compose" ]; then
@@ -41,7 +43,19 @@ warm_up_containers() {
 	"$_compose" -f "$DEPLOY_COMPOSE_FILE" up -d || echo "Warning: some containers failed to start"
 }
 
+copy_secrets() {
+	if [ ! -f "$HDD_SECRETS_FILE" ]; then
+		echo "Error: secrets file not found on data drive: $HDD_SECRETS_FILE"
+		echo "Create /var/media/Kodi_Storage/secrets/libreelec.env before running install."
+		exit 1
+	fi
+	mkdir -p "$(dirname "$DEPLOY_SECRETS_FILE")"
+	cp "$HDD_SECRETS_FILE" "$DEPLOY_SECRETS_FILE"
+	echo "Copied secrets to $DEPLOY_SECRETS_FILE"
+}
+
 run_phase1() {
+	copy_secrets
 	./install_addons.sh
 	./distribute_files.sh --no-autostart
 	warm_up_containers

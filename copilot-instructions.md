@@ -71,8 +71,11 @@ Design rule: keep OS and config on SD card so HDD can sleep when idle.
 Secrets must never be hardcoded in tracked files.
 
 - Template: `secrets/libreelec.env.example`
-- Runtime file on target: `/storage/.config/secrets/libreelec.env`
+- Source before install: `/var/media/Kodi_Storage/secrets/libreelec.env` (on data drive, not tracked)
+- Runtime file on target: `/storage/.config/secrets/libreelec.env` (copied by installer, lives on SD card)
 - `docker-compose.yml` must use environment interpolation for secrets and credentials
+
+`run_install.sh` copies HDD → SD as its first step so all runtime scripts (and compose) always read from `/storage/.config/secrets/libreelec.env` regardless of HDD state.
 
 If a token/password appears in repository content, move it to env-based configuration and treat it as exposed.
 

@@ -2,8 +2,8 @@
 
 # Common runtime helpers for LibreELEC background scripts.
 
-# Keep docker-compose binaries from Kodi add-ons reachable.
-PATH="/storage/bin:/usr/bin:/usr/sbin:/storage/.kodi/addons/docker.linuxserver.updater/bin:/storage/.kodi/addons/service.system.docker/bin:$PATH"
+# Keep docker-compose binaries from the installer and Kodi add-ons reachable.
+PATH="/storage/compose:/storage/bin:/usr/bin:/usr/sbin:/storage/.kodi/addons/docker.linuxserver.updater/bin:/storage/.kodi/addons/service.system.docker/bin:$PATH"
 export PATH
 
 APP_ROOT="${APP_ROOT:-/storage/.config}"
@@ -23,6 +23,11 @@ load_secrets() {
 }
 
 compose_bin() {
+    if [ -x "/storage/compose/docker-compose" ]; then
+        echo "/storage/compose/docker-compose"
+        return 0
+    fi
+
     if [ -x "/storage/bin/docker-compose" ]; then
         echo "/storage/bin/docker-compose"
         return 0
