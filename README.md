@@ -83,8 +83,11 @@ Then run:
 It executes:
 
 1. `install_addons.sh`
-2. `distribute_files.sh`
-3. `kodi_settings.sh` (only if `jq` is already available)
+2. `distribute_files.sh --no-autostart`
+3. container warm-up (`docker-compose pull` then `up -d`) before reboot
+4. `kodi_settings.sh` (only if `jq` is already available)
+
+`autostart.sh` is intentionally deployed only in second pass to avoid boot-time race conditions during initial setup.
 
 If `jq` is not available on first boot, reboot LibreELEC and run:
 
@@ -98,6 +101,8 @@ Optional explicit phases:
 ./run_install.sh pre-reboot
 ./run_install.sh post-reboot
 ```
+
+`post-reboot` performs `distribute_files.sh --with-autostart` and then `kodi_settings.sh`.
 
 ## Runtime Notes
 

@@ -5,6 +5,7 @@ set -eu
 DESTINATION="/storage/.config"
 SECRETS_DEST_DIR="$DESTINATION/secrets"
 DB_BACKUP="/media/sda1-usb-OTi2168_Flash_Di/db-backup"
+AUTOSTART_MODE="${1:---no-autostart}"
 
 FOLDERS="
 prowlarr
@@ -47,7 +48,18 @@ for folder in $FOLDERS; do
 done
 
 echo "Copying top-level scripts"
-copy_required_file "autostart.sh" "$DESTINATION/autostart.sh"
+case "$AUTOSTART_MODE" in
+    --with-autostart)
+        copy_required_file "autostart.sh" "$DESTINATION/autostart.sh"
+        ;;
+    --no-autostart)
+        echo "Skipping autostart deployment for this pass"
+        ;;
+    *)
+        echo "Usage: ./distribute_files.sh [--no-autostart|--with-autostart]"
+        exit 1
+        ;;
+esac
 copy_required_file "docker-compose.yml" "$DESTINATION/docker-compose.yml"
 copy_required_file "README.md" "$DESTINATION/README.md"
 
@@ -67,7 +79,9 @@ else
     echo "Warning: database backup folder missing: $DB_BACKUP"
 fi
 
-chmod +x "$DESTINATION/autostart.sh" || true
+if [ -f "$DESTINATION/autostart.sh" ]; then
+    chmod +x "$DESTINATION/autostart.sh" || true
+fi
 find "$DESTINATION/scripts" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
 
 echo "Distribution completed"

@@ -89,14 +89,15 @@ Expected first-run sequence on a new SD card:
 `run_install.sh` orchestrates:
 
 1. `install_addons.sh`
-2. `distribute_files.sh`
-3. `kodi_settings.sh` (same boot only if `jq` is already available)
+2. `distribute_files.sh --no-autostart`
+3. pre-reboot container warm-up (`docker-compose pull` + `up -d`)
+4. `kodi_settings.sh` (same boot only if `jq` is already available)
 
 If `jq` is not available yet, expected flow is:
 
 1. Run `./run_install.sh` (or `./run_install.sh pre-reboot`)
 2. Reboot LibreELEC
-3. Run `./run_install.sh post-reboot`
+3. Run `./run_install.sh post-reboot` (deploys autostart + applies Kodi settings)
 
 Manual confirmation in Kodi is expected and accepted.
 
