@@ -1,55 +1,44 @@
-#!/bin/bash
+#!/bin/sh
 
-# Chemin vers votre fichier docker-compose.yml
-COMPOSE_FILE="/storage/.config/docker-compose.yml"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 
-# Vérifier l'existence du fichier
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/common.sh"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/logging.sh"
+
+load_secrets
+init_logger "update_containers"
+
 if [ ! -f "$COMPOSE_FILE" ]; then
-    echo "❌ Fichier docker-compose non trouvé : $COMPOSE_FILE"
+    log_error "docker-compose file not found at $COMPOSE_FILE"
     exit 1
 fi
 
-echo "🔄 Mise à jour des conteneurs à partir de $COMPOSE_FILE"
-
-# 1. Vérifier et mettre à jour Docker si nécessaire
-if command -v docker-compose &> /dev/null; then
-    echo "✅ docker-compose détecté"
-else
-    echo "⚠️ docker-compose non installé. Installez docker-compose-plugin."
+if ! compose_bin >/dev/null 2>&1; then
+    log_error "docker-compose binary not found"
     exit 1
 fi
 
-# 2. Puller les nouvelles images
-echo "📥 Téléchargement des dernières images..."
-if ! docker-compose -f "$COMPOSE_FILE" pull; then
-    echo "❌ Échec du téléchargement des images"
+log_info "Pulling latest container images"
+if ! compose pull; then
+    log_error "Image pull failed"
     exit 1
 fi
 
-# 3. Arrêter et supprimer les anciens conteneurs
-echo "🛑 Arrêt des conteneurs actuels..."
-if ! docker-compose -f "$COMPOSE_FILE" down; then
-    echo "❌ Échec de l'arrêt des conteneurs"
+log_info "Stopping current stack"
+if ! compose down; then
+    log_error "Stack shutdown failed"
     exit 1
 fi
 
-# 4. Démarrer les nouveaux conteneurs
-echo "🚀 Démarrage des conteneurs mis à jour..."
-if ! docker-compose -f "$COMPOSE_FILE" up -d; then
-    echo "❌ Échec du démarrage des conteneurs"
+log_info "Starting updated stack"
+if ! compose up -d; then
+    log_error "Stack startup failed"
     exit 1
 fi
 
-# 5. Nettoyer les anciennes images inutilisées
-echo "🧹 Nettoyage des images orphelines..."
-docker image prune -f
+log_info "Pruning dangling docker images"
+docker image prune -f >/dev/null 2>&1 || log_warn "docker image prune returned an error"
 
-# 6. (Optionnel) Scanner les images pour vulnérabilités
-# Assurez-vous d'avoir Trivy installé : https://aquasecurity.github.io/trivy/
-# for service in $(docker-compose -f "$COMPOSE_FILE" config --services); do
-#     image=$(docker-compose -f "$COMPOSE_FILE" images | grep "$service" | awk '{print $3}')
-#     echo "🔍 Analyse de sécurité de l'image : $image"
-#     trivy image "$image"
-# done
-
-echo "✅ Mise à jour terminée avec succès !"   
+log_info "Container update completed"

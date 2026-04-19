@@ -1,18 +1,21 @@
-#!/bin/bash
-#Convertit les fichiers d'une extension donnée en argument
+#!/bin/sh
+
+# Convert files from one audio extension to mp3.
+
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] [flac2mp3] $*"
+}
 
 if [ "$#" -ne 2 ]; then
-    echo "Arguments : Dossier à traiter, extension à convertir (sans point)"
+    log "Usage: <directory> <extension_without_dot>"
     exit 1
 fi
 
-echo
-date
-echo "Lancement du script de conversion"
+log "Starting conversion run"
 
 dossier="$1"
 extension="$2"
-n=0
+total=0
 
 # Build the container: (watch the point at the end !)
 # LibreELEC:~/.config/flactomp3 # docker build -t flac2mp3 .
@@ -22,30 +25,29 @@ n=0
 # Cron entry (every hour):
 # 0 * * * * /storage/.kodi/addons/service.system.docker/bin/docker run --rm -v /media/Kodi_Storage/music:/music flac2mp3 /music flac >> /storage/.config/flac-convert.log 2>&1
 
-echo "Repertoire : $dossier"
-echo "Extension : .$extension"
-IFS=$'\n'
+log "Directory: $dossier"
+log "Extension: .$extension"
 
 if [ -d "$dossier" ]; then
-    for fichier in $(find "$dossier" -name "*.$extension"); do
+    total="$(find "$dossier" -name "*.$extension" | wc -l)"
+    find "$dossier" -name "*.$extension" | while IFS= read -r fichier; do
         out="${fichier%.$extension}.mp3"
-        echo "Conversion de $fichier vers $out"
+        log "Converting $fichier -> $out"
         
         # Convert with overwrite (-y) and check success
         if ffmpeg -y -i "$fichier" -map 0:a -c:a libmp3lame -b:a 320k -af "aresample=resampler=soxr:osr=44100" -id3v2_version 3 "$out"; then
-            echo "Suppression de $fichier"
-            rm "$fichier" && echo "✓ $fichier supprimé"
+            log "Removing source file $fichier"
+            rm "$fichier" && log "Removed $fichier"
         else
-            echo "✗ Erreur conversion, original conservé: $fichier"
+            log "Conversion failed, keeping source: $fichier"
         fi
         
         sleep 1
-        n=$((n+1))
     done
 else
-    echo "Dossier invalide: $dossier"
+    log "Invalid directory: $dossier"
     exit 1
 fi
 
-echo "$n fichiers traités !"
+log "$total files processed"
 

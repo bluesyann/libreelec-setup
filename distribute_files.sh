@@ -1,49 +1,73 @@
-#!/bin/bash
+#!/bin/sh
 
-folders="prowlarr radarr scripts weather flactomp3 joal lidarr qbittorrent"
+set -eu
 
-destination="/storage/.config/"
-dbbackup="/media/sda1-usb-OTi2168_Flash_Di/db-backup"
+DESTINATION="/storage/.config"
+SECRETS_DEST_DIR="$DESTINATION/secrets"
+DB_BACKUP="/media/sda1-usb-OTi2168_Flash_Di/db-backup"
 
-# Check if destination exists and is a directory
-if [ ! -d "$destination" ]; then
-    echo "Error: Destination directory does not exist: $destination"
+FOLDERS="
+prowlarr
+radarr
+scripts
+weather
+flactomp3
+joal
+lidarr
+qbittorrent
+"
+
+copy_required_file() {
+    _src="$1"
+    _dst="$2"
+
+    if [ -f "$_src" ]; then
+        cp "$_src" "$_dst"
+        echo "Copied $_src -> $_dst"
+    else
+        echo "Warning: missing file $_src"
+    fi
+}
+
+if [ ! -d "$DESTINATION" ]; then
+    echo "Error: destination folder missing: $DESTINATION"
     exit 1
 fi
 
-# Iterate over each folder (those on git)
-echo "Copying config text files to $destination"
-for folder in $folders; do
-    if [ -d $folder ]; then
-        echo "Copying $folder to $destination"
-        cp -r $folder $destination
+echo "Copying repository folders to $DESTINATION"
+for folder in $FOLDERS; do
+    [ -z "$folder" ] && continue
+    if [ -d "$folder" ]; then
+        rm -rf "$DESTINATION/$folder"
+        cp -r "$folder" "$DESTINATION/"
+        echo "Copied folder: $folder"
     else
-        echo "Warning: Folder does not exist: $folder"
+        echo "Warning: missing folder $folder"
     fi
 done
 
-# Get database files from the mass storage device
-echo "Copying database files from the backup drive to $destination"
-if [ -d $dbbackup ]; then
-    cp -r $dbbackup/* $destination
-    echo "Done."
-else
-    echo "Warning: Folder does not exist: $dbbackup"
+echo "Copying top-level scripts"
+copy_required_file "autostart.sh" "$DESTINATION/autostart.sh"
+copy_required_file "docker-compose.yml" "$DESTINATION/docker-compose.yml"
+copy_required_file "README.md" "$DESTINATION/README.md"
+
+echo "Copying secrets template"
+mkdir -p "$SECRETS_DEST_DIR"
+copy_required_file "secrets/libreelec.env.example" "$SECRETS_DEST_DIR/libreelec.env.example"
+
+if [ ! -f "$SECRETS_DEST_DIR/libreelec.env" ]; then
+    cp "$SECRETS_DEST_DIR/libreelec.env.example" "$SECRETS_DEST_DIR/libreelec.env"
+    echo "Created $SECRETS_DEST_DIR/libreelec.env from template"
 fi
 
-# Finally, copy autostart.sh and docker-compose.yml to their respective locations
-if [ -f "files/autostart.sh" ]; then
-    echo "Copying autostart.sh to $destination"
-    cp "files/autostart.sh" $destination
-    echo "Done."
+if [ -d "$DB_BACKUP" ]; then
+    echo "Copying database backups from $DB_BACKUP"
+    cp -r "$DB_BACKUP"/* "$DESTINATION/"
 else
-    echo "Warning: autostart.sh not found"
+    echo "Warning: database backup folder missing: $DB_BACKUP"
 fi
 
-if [ -f "files/docker-compose.yml" ]; then
-    echo "Copying docker-compose.yml to $destination"
-    cp "files/docker-compose.yml" $destination
-    echo "Done."
-else
-    echo "Warning: docker-compose.yml not found"
-fi
+chmod +x "$DESTINATION/autostart.sh" || true
+find "$DESTINATION/scripts" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+
+echo "Distribution completed"

@@ -1,24 +1,24 @@
-#!/bin/bash
+#!/bin/sh
 
-#This script check if the printer is on
-#when on, it starts the CUPS service
-#when off, it stops it
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 
-export PATH=/storage/bin:/usr/bin:/usr/sbin:/storage/.kodi/addons/docker.linuxserver.updater/bin:/storage/.kodi/addons/service.system.docker/bin:$PATH
-chmod 666 /var/run/docker.sock
-#link to the docker yaml file
-yaml="/storage/.config/docker-compose.yml"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/common.sh"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/logging.sh"
 
-# Main loop
-while true; do
-	current_datetime=$(date +"%Y-%m-%d %H:%M:%S")
+load_secrets
+init_logger "restart_containers_on_error"
 
-	#Check for Navidrome errors from the log
-	NDerrors=$(docker logs --tail=10 navidrome 2>&1 | grep -i "input/output error")
-	if [[ "$NDerrors" != "" ]]; then
-	    echo "I/O error on Navidrome detected, restarting the container";
-	    /storage/bin/docker-compose -f $yaml restart navidrome
-	fi
-	echo "No i/o error detected: $current_datetime"
-    sleep 60  # Wait for 1 minute before checking again
+log_info "Navidrome error monitor started"
+
+while :; do
+    if docker logs --tail=20 navidrome 2>&1 | grep -qi "input/output error"; then
+        log_warn "Detected navidrome I/O error, restarting container"
+        compose restart navidrome >/dev/null 2>&1 || log_error "Failed to restart navidrome"
+    else
+        log_info "No navidrome I/O error detected"
+    fi
+
+    sleep 60
 done

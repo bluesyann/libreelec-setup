@@ -1,0 +1,11 @@
+# Secrets and runtime data
+secrets/*.env
+!secrets/*.env.example
+
+# Local and generated logs
+*.log
+logs/
+
+# Python cache
+__pycache__/
+*.pyc

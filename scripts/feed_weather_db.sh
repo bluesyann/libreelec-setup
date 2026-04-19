@@ -1,117 +1,94 @@
-#!/bin/bash
+#!/bin/sh
 
-# query example
-# docker exec mariadb mariadb -u root -ppass WeatherData -e "SELECT * FROM weather;"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 
-log="/storage/.config/feed_weather_db.log"
-weather_station_ip="192.168.1.100"
-weather_station_port="80"
-db_container="mariadb"
-db_user="root"
-db_pass="pass"
-db_name="WeatherData"
-db_table="weather"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/common.sh"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/logging.sh"
 
-# Clean old logs
-date > "$log"
-echo "Running feed_weather_db.sh script" >> "$log"
+load_secrets
+init_logger "feed_weather_db"
 
-# Function to log messages with timestamp
-log_message() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" >> "$log"
-}
+WEATHER_STATION_IP="${WEATHER_STATION_IP:-192.168.1.100}"
+WEATHER_STATION_PORT="${WEATHER_STATION_PORT:-80}"
+DB_CONTAINER="mariadb"
+DB_USER="${WEATHER_DB_USER:-root}"
+DB_PASS="${WEATHER_DB_PASSWORD:-${MARIADB_ROOT_PASSWORD:-}}"
+DB_NAME="${MARIADB_DATABASE:-WeatherData}"
+DB_TABLE="weather"
 
-# Function to check if the weather station is reachable
 check_weather_station() {
-    if ! ping -c 1 -W 2 "$weather_station_ip" &> /dev/null; then
-        log_message "ERROR: Weather station at $weather_station_ip is unreachable."
-        return 1
-    fi
-    return 0
+    ping -c 1 -W 2 "$WEATHER_STATION_IP" >/dev/null 2>&1
 }
 
-# Function to check if the database container is reachable
 check_db_container() {
-    if ! docker exec "$db_container" mariadb -u "$db_user" -p"$db_pass" -e "SELECT 1" &> /dev/null; then
-        log_message "ERROR: Cannot connect to MariaDB in container $db_container."
-        return 1
-    fi
-    return 0
+    docker exec "$DB_CONTAINER" mariadb -u "$DB_USER" -p"$DB_PASS" -e "SELECT 1" >/dev/null 2>&1
 }
 
-# Function to fetch and parse weather data
 fetch_weather_data() {
-    local response
-    response=$(curl -s "http://$weather_station_ip:$weather_station_port/return_sensors")
-    if [ -z "$response" ]; then
-        log_message "ERROR: Empty response from weather station."
-        return 1
-    fi
-    echo "$response"
-    return 0
+    curl -fsS "http://$WEATHER_STATION_IP:$WEATHER_STATION_PORT/return_sensors"
 }
 
-# Function to update RTC
 update_rtc() {
-    local timestamp
-    timestamp=$(date +%Y-%m-%d-%w-%H-%M-%S)
-    if ! curl -s "http://$weather_station_ip:$weather_station_port/settime?timestamp=$timestamp" &> /dev/null; then
-        log_message "ERROR: Failed to update RTC on weather station."
-        return 1
-    fi
-    return 0
+    _timestamp="$(date +%Y-%m-%d-%w-%H-%M-%S)"
+    curl -fsS "http://$WEATHER_STATION_IP:$WEATHER_STATION_PORT/settime?timestamp=$_timestamp" >/dev/null 2>&1
 }
 
-# Main loop
-while true; do
-    log_message "Starting new data collection cycle..."
+insert_data() {
+    _datetime="$1"
+    _temperature="$2"
+    _humidity="$3"
+    _pressure="$4"
 
-    # Check weather station
+    docker exec "$DB_CONTAINER" mariadb -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -e \
+        "INSERT INTO $DB_TABLE (DateTime, Temperature, Humidity, Pressure) VALUES ('$_datetime', '$_temperature', '$_humidity', '$_pressure');" >/dev/null 2>&1
+}
+
+log_info "Weather feeder started"
+
+while :; do
     if ! check_weather_station; then
+        log_error "Weather station unreachable at $WEATHER_STATION_IP"
         sleep 60
         continue
     fi
 
-    # Fetch weather data
-    weather_data=$(fetch_weather_data)
-    if [ $? -ne 0 ]; then
+    weather_data="$(fetch_weather_data 2>/dev/null)"
+    if [ -z "$weather_data" ]; then
+        log_error "Weather station returned empty payload"
         sleep 60
         continue
     fi
 
-    # Parse data (format: Temperature;Humidity;Pressure)
-    temperature=$(echo "$weather_data" | cut -d';' -f1)
-    humidity=$(echo "$weather_data" | cut -d';' -f2)
-    pressure=$(echo "$weather_data" | cut -d';' -f3)
-    log_message "DEBUG: temperature=$temperature, humidity=$humidity, pressure=$pressure"
+    temperature="$(echo "$weather_data" | cut -d ';' -f 1)"
+    humidity="$(echo "$weather_data" | cut -d ';' -f 2)"
+    pressure="$(echo "$weather_data" | cut -d ';' -f 3)"
+
     if [ -z "$temperature" ] || [ -z "$humidity" ] || [ -z "$pressure" ]; then
-        log_message "ERROR: Failed to parse weather data: $weather_data"
+        log_error "Invalid sensor payload: $weather_data"
         sleep 60
         continue
     fi
 
-    # Check database
     if ! check_db_container; then
+        log_error "MariaDB container unavailable"
         sleep 60
         continue
     fi
 
-    # Insert data into database
-    datetime=$(date +'%Y-%m-%d %H:%M:%S')
-    if ! docker exec "$db_container" mariadb -u "$db_user" -p"$db_pass" "$db_name" -e \
-        "INSERT INTO $db_table (DateTime, Temperature, Humidity, Pressure) VALUES ('$datetime', '$temperature', '$humidity', '$pressure');"; then
-        log_message "ERROR: Failed to insert data into database."
+    datetime="$(date +'%Y-%m-%d %H:%M:%S')"
+    if ! insert_data "$datetime" "$temperature" "$humidity" "$pressure"; then
+        log_error "Failed to insert weather data"
         sleep 60
         continue
     fi
 
-    # Update RTC
     if ! update_rtc; then
-        sleep 60
-        continue
+        log_warn "Failed to update weather station RTC"
     fi
 
-    log_message "Successfully collected and stored data: Temperature=$temperature, Humidity=$humidity, Pressure=$pressure"
-    sleep 60 # Wait 1 minutes before next cycle
+    log_info "Stored weather data: T=$temperature H=$humidity P=$pressure"
+    sleep 60
 done
 

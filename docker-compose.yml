@@ -1,0 +1,242 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Paris}
+      - WEBUI_PORT=8081
+      - TORRENTING_PORT=6881
+    ports:
+      - "8081:8081"
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - type: bind
+        source: /storage/.config/qbittorrent
+        target: /config
+      - type: bind
+        source: /var/media/Kodi_Storage/downloads
+        target: /downloads
+    restart: unless-stopped
+
+  joal:
+    image: anthonyraymond/joal:latest
+    container_name: joal
+    volumes:
+      - type: bind
+        source: /storage/.config/joal
+        target: /data
+    ports:
+      - "6060:8080"
+    command:
+      - "--joal-conf=/data"
+      - "--spring.main.web-environment=true"
+      - "--server.port=8080"
+      - "--joal.ui.path.prefix=${JOAL_UI_PATH_PREFIX}"
+      - "--joal.ui.secret-token=${JOAL_UI_SECRET_TOKEN}"
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Paris}
+      - WEBUI_PORT=7878
+    ports:
+      - "7878:7878"
+    volumes:
+      - type: bind
+        source: /storage/.config/radarr
+        target: /config
+      - type: bind
+        source: /var/media/Kodi_Storage
+        target: /media
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Paris}
+      - WEBUI_PORT=9696
+    ports:
+      - "9696:9696"
+    volumes:
+      - type: bind
+        source: /storage/.config/prowlarr
+        target: /config
+      - type: bind
+        source: /var/media/Kodi_Storage/downloads
+        target: /downloads
+    restart: unless-stopped
+
+  solvearr:
+    image: nabilak/solvearr:latest
+    container_name: solvearr
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
+  cups:
+    image: anujdatar/cups:latest
+    container_name: cups
+    ports:
+      - "631:631"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - CUPSADMIN=${CUPS_ADMIN}
+      - CUPSPASSWORD=${CUPS_PASSWORD}
+      - TZ=${TZ:-Europe/Paris}
+    volumes:
+      - type: bind
+        source: /storage/.config/cups
+        target: /etc/cups
+    privileged: true
+    healthcheck:
+      test: ["CMD", "scanimage", "-L"]
+      interval: 1m
+      timeout: 30s
+      retries: 3
+    restart: unless-stopped
+
+  sane:
+    image: sbs20/scanservjs:latest
+    container_name: sane
+    ports:
+      - "7979:8080"
+      - "6566:6566"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    privileged: true
+    healthcheck:
+      test: ["CMD", "scanimage", "-L"]
+      interval: 1m
+      timeout: 30s
+      retries: 3
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Paris}
+      - WEBUI_PORT=8686
+    volumes:
+      - type: bind
+        source: /storage/.config/lidarr
+        target: /config
+      - type: bind
+        source: /var/media/Kodi_Storage/music
+        target: /music
+      - type: bind
+        source: /var/media/Kodi_Storage/downloads
+        target: /downloads
+    ports:
+      - "8686:8686"
+    restart: unless-stopped
+
+  syncthing:
+    image: ghcr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Paris}
+    volumes:
+      - type: bind
+        source: /storage/.config/syncthing
+        target: /config
+      - type: bind
+        source: /var/media/Kodi_Storage/music
+        target: /music
+      - type: bind
+        source: /var/media/Kodi_Storage/Musique
+        target: /Musique
+      - type: bind
+        source: /storage
+        target: /storage
+    ports:
+      - "8384:8384"
+      - "22000:22000"
+      - "21027:21027/udp"
+    restart: unless-stopped
+
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - ND_SCANSCHEDULE=1h
+      - ND_EXCLUDEDFILEEXTENSIONS=flac,wav,aiff
+      - ND_TRANSCODING_ENABLED=true
+      - ND_PLAYBACK_BUFFERSECS=5
+      - ND_LOGLEVEL=info
+      - ND_SCANNER_SCANONSTARTUP=false
+      - ND_SCANNER_ENABLED=false
+    volumes:
+      - type: bind
+        source: /storage/.config/navidrome
+        target: /data
+      - type: bind
+        source: /var/media/Kodi_Storage/music
+        target: /music
+        read_only: true
+      - type: bind
+        source: /var/media/Kodi_Storage/Musique
+        target: /Musique_ordi
+        read_only: true
+    ports:
+      - "4533:4533"
+    restart: unless-stopped
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MARIADB_DATABASE:-WeatherData}
+    ports:
+      - "3306:3306"
+    volumes:
+      - type: bind
+        source: /storage/.config/mariadb
+        target: /var/lib/mysql
+    restart: unless-stopped
+
+  weatherpage:
+    build: /storage/.config/weather
+    container_name: weatherpage
+    environment:
+      WEATHER_DB_HOST: mariadb
+      WEATHER_DB_NAME: ${MARIADB_DATABASE:-WeatherData}
+      WEATHER_DB_USER: ${WEATHER_DB_USER:-root}
+      WEATHER_DB_PASSWORD: ${WEATHER_DB_PASSWORD}
+      WEATHER_DB_PORT: 3306
+    ports:
+      - "8181:5000"
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - navidrome
+      - weatherpage
+      - lidarr
+      - radarr
+    restart: unless-stopped

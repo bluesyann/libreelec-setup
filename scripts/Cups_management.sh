@@ -1,77 +1,53 @@
-#!/bin/bash
+#!/bin/sh
 
-#This script check if the printer is on
-#when on, it starts the CUPS service
-#when off, it stops it
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 
-export PATH=/storage/bin:/usr/bin:/usr/sbin:/storage/.kodi/addons/docker.linuxserver.updater/bin:/storage/.kodi/addons/service.system.docker/bin:$PATH
-chmod 666 /var/run/docker.sock
-#link to the docker yaml file
-yaml="/storage/.config/docker-compose.yml"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/common.sh"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/lib/logging.sh"
 
-#Wait for the Docker Compose startup to be completed
-#while [ $(/storage/bin/docker-compose -f $yaml ps --services --filter "status=running" | wc -l) -lt $(/storage/bin/docker-compose -f $yaml config --services | wc -l) ]; do
- #   echo "Waiting for all services to be up..."
-  #  sleep 5
-#done
-#echo "All services are up and running!"
+load_secrets
+init_logger "cups_management"
 
-# Main loop
-while true; do
-	current_datetime=$(date +"%Y-%m-%d %H:%M:%S")
-	echo "Current date and time: $current_datetime"
+printer_connected() {
+    lsusb 2>/dev/null | grep -qi "PIXMA MG2500"
+}
 
-	#Check printer
-	printer=$(lsusb | grep Canon)
-	if [[ "$printer" == *"PIXMA MG2500"* ]]; then
-		echo "Printer connected";
-		printer=true;
-	else
-		echo "Printer disconnected";
-		printer=false;
-	fi
-	
-	#Check CUPS container
-	#docker-compose -f "/storage/.config/docker-compose.yml" ps | grep cups
-	cups="$(docker inspect -f '{{.State.Running}}' cups 2>/dev/null)";
-	if [[ "$cups" == "true" ]]; then
-		echo "CUPS container up";
-	else
-		echo "CUPS container down";
-	fi
-	
-	#Check sane container
-	sane="$(docker inspect -f '{{.State.Running}}' sane 2>/dev/null)";
-	if [[ "$sane" == "true" ]]; then
-		echo "SANE container up";
-	else
-		echo "SANE container down";
-	fi
-	
-	#printer up : we start CUPS and Sane if down
-	if [ $printer == true ]; then
-		if [ $cups == false ]; then
-			echo "Printer up, CUPS down : Starting CUPS"
-			/storage/bin/docker-compose -f $yaml start cups
-		fi
-		if [ $sane == false ]; then
-			echo "Printer up, SANE down : Starting SANE"
-			#docker-compose -f /storage/.config/docker-compose.yml start sane
-			/storage/bin/docker-compose -f $yaml up -d sane
-		fi
-	fi
-	
-	#printer down : we stop CUPS and Sane if up
-	if [ $printer == false ]; then
-		if [ $cups == true ]; then
-			echo "Printer down, CUPS up : stopping CUPS"
-			/storage/bin/docker-compose -f $yaml stop cups
-		fi
-		if [ $sane == true ]; then
-			echo "Printer down, SANE up : stopping SANE"
-			/storage/bin/docker-compose -f $yaml stop sane
-		fi
-	fi
-	
-    sleep 10  # Wait for 10 seconds before checking again
+container_running() {
+    _name="$1"
+    _running="$(docker inspect -f '{{.State.Running}}' "$_name" 2>/dev/null)"
+    [ "$_running" = "true" ]
+}
+
+log_info "Printer monitor started"
+
+while :; do
+    if printer_connected; then
+        log_info "Printer detected"
+
+        if ! container_running cups; then
+            log_info "Starting cups container"
+            compose up -d cups >/dev/null 2>&1 || log_error "Failed to start cups"
+        fi
+
+        if ! container_running sane; then
+            log_info "Starting sane container"
+            compose up -d sane >/dev/null 2>&1 || log_error "Failed to start sane"
+        fi
+    else
+        log_info "Printer not detected"
+
+        if container_running cups; then
+            log_info "Stopping cups container"
+            compose stop cups >/dev/null 2>&1 || log_error "Failed to stop cups"
+        fi
+
+        if container_running sane; then
+            log_info "Stopping sane container"
+            compose stop sane >/dev/null 2>&1 || log_error "Failed to stop sane"
+        fi
+    fi
+
+    sleep 10
 done

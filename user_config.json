@@ -14,8 +14,8 @@
     "dvds.autorun": "true",
     "subtitles.languages": "English,French",
     "services.webserver": "true",
-    "services.webserverusername": "defuser",
-    "services.webserverpassword": "defpass",
+    "services.webserverusername": "change_me",
+    "services.webserverpassword": "change_me",
     "services.esallinterfaces": "true",
     "audiooutput.audiodevice": "ALSA:@:CARD=DAC,DEV=0|USB Audio DAC",
     "input.libinputkeyboardlayout": "fr"
