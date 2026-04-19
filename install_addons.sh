@@ -7,15 +7,6 @@
 # trouver comment faire ça
 #kodi-send --action="InstallAddon(repository.castagnait)"
 
-# Install the json parser from System Tools addon
-wait_for_path() {
-    local substring="$1"
-    while [[ ":$PATH:" != *"$substring"* ]]; do
-        sleep 1
-        echo "Waiting for '$substring' to appear in PATH"
-    done
-}
-
 wait_for_subfolder() {
     local parent_folder="$1"
     local subfolder="$2"
@@ -30,18 +21,26 @@ wait_for_subfolder() {
 pluginloc="/storage/.kodi/addons/"
 
 # List of addons to install
-addons=(
-    "plugin.video.netflix"
-    "plugin.video.arteplussept"
-    "virtual.rpi-tools"
-    "virtual.system-tools"
-    "service.subtitles.opensubtitles"
-    "service.system.docker"
-)
+addons="plugin.video.netflix plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles service.system.docker resource.language.fr_fr"
 
-for addon in "${addons[@]}"; do
+# Run the install
+for addon in $addons; do
     echo "Installing $addon..."
     kodi-send --action="InstallAddon($addon)"
     wait_for_subfolder "$pluginloc" "$addon"
     echo "$addon installed!"
 done
+
+
+# Install the last version of docker-compose for local architecture
+arch=$(uname -m)
+if [ $arch=="armv7l" ]; then
+    arch="armv7"
+fi
+
+composedir="/storage/compose"
+compose_version=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+compose_url="https://github.com/docker/compose/releases/download/${compose_version}/docker-compose-$arch"
+echo "Getting $compose_url"
+curl -SL $compose_url -o $composedir/docker-compose
+chmod +x $composedir/docker-compose

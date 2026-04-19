@@ -2,8 +2,8 @@
 
 folders="prowlarr radarr scripts weather flactomp3 joal lidarr qbittorrent"
 
-destination="/home/yann/test"
-dbbackup="/media/yann/D3E0-DBB3/db-backup"
+destination="/storage/.config/"
+dbbackup="/media/sda1-usb-OTi2168_Flash_Di/db-backup"
 
 # Check if destination exists and is a directory
 if [ ! -d "$destination" ]; then
@@ -32,17 +32,17 @@ else
 fi
 
 # Finally, copy autostart.sh and docker-compose.yml to their respective locations
-if [ -f "autostart.sh" ]; then
+if [ -f "files/autostart.sh" ]; then
     echo "Copying autostart.sh to $destination"
-    cp "autostart.sh" $destination
+    cp "files/autostart.sh" $destination
     echo "Done."
 else
     echo "Warning: autostart.sh not found"
 fi
 
-if [ -f "docker-compose.yml" ]; then
+if [ -f "files/docker-compose.yml" ]; then
     echo "Copying docker-compose.yml to $destination"
-    cp "docker-compose.yml" $destination
+    cp "files/docker-compose.yml" $destination
     echo "Done."
 else
     echo "Warning: docker-compose.yml not found"

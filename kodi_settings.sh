@@ -12,7 +12,7 @@ change_xmlval() {
 }
 
 userconfig="user_config.json"
-kodifile="/home/yann/test/guisettings.xml"
+kodifile="/storage/.kodi/userdata/guisettings.xml"
 
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
