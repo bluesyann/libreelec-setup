@@ -7,8 +7,8 @@ DEPLOY_COMPOSE_FILE="/storage/.config/docker-compose.yml"
 DEPLOY_SECRETS_FILE="/storage/.config/secrets/libreelec.env"
 
 compose_bin() {
-	if [ -x "/storage/bin/docker-compose" ]; then
-		echo "/storage/bin/docker-compose"
+	if [ -x "/storage/compose/docker-compose" ]; then
+		echo "/storage/compose/docker-compose"
 		return 0
 	fi
 	if command -v docker-compose >/dev/null 2>&1; then

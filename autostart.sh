@@ -57,10 +57,14 @@ launch_monitor() {
 log_info "Autostart sequence started"
 
 chmod 666 /var/run/docker.sock 2>/dev/null || true
-sleep 60
 
-power_cycle_hdd_if_missing
-wait_storage_ready
+if ! timeout 300 power_cycle_hdd_if_missing; then
+    log_warn "HDD power cycle timed out"
+fi
+
+if ! timeout 600 wait_storage_ready; then
+    log_error "Storage readiness timeout, continuing anyway"
+fi
 
 hdparm -S 100 /dev/sda >/dev/null 2>&1 || log_warn "Failed to set disk standby timer on /dev/sda"
 
@@ -68,10 +72,10 @@ chown -R "${PUID:-1000}:${PGID:-1000}" "$STORAGE_ROOT" >/dev/null 2>&1 || log_wa
 chmod -R 777 "$STORAGE_ROOT" >/dev/null 2>&1 || log_warn "Failed to update permissions on $STORAGE_ROOT"
 
 sleep 60
-if compose up -d; then
+if timeout 300 compose up -d 2>&1; then
     log_info "docker-compose stack started"
 else
-    log_error "docker-compose stack startup failed"
+    log_error "docker-compose stack startup failed or timed out"
 fi
 
 sleep 20

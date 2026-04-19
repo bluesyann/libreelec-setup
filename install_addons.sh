@@ -64,12 +64,6 @@ install_compose_binary() {
     fi
 
     chmod +x "$compose_target"
-
-    if [ -d /storage/bin ]; then
-        cp "$compose_target" /storage/bin/docker-compose
-        chmod +x /storage/bin/docker-compose
-    fi
-
     return 0
 }
 
@@ -89,10 +83,6 @@ done
 if ! install_compose_binary; then
     if command -v docker-compose >/dev/null 2>&1; then
         echo "Using existing docker-compose from PATH"
-        if [ -d /storage/bin ]; then
-            cp "$(command -v docker-compose)" /storage/bin/docker-compose
-            chmod +x /storage/bin/docker-compose
-        fi
     else
         echo "Warning: docker-compose is not installed yet. Re-run install_addons.sh after reboot."
     fi
