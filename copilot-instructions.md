@@ -72,12 +72,10 @@ Secrets must never be hardcoded in tracked files.
 
 - Template: `secrets/libreelec.env.example`
 - Source before install: `/var/media/Kodi_Storage/secrets/libreelec.env` (on data drive, not tracked)
-- Runtime file on target: `/storage/.config/secrets/libreelec.env` (copied by installer, lives on SD card)
+- Install-time file on target: `/storage/.config/secrets/libreelec.env` (temporary, copied by installer)
 - `docker-compose.yml` must use environment interpolation for secrets and credentials
 
-`run_install.sh` copies HDD → SD as its first step so all runtime scripts (and compose) always read from `/storage/.config/secrets/libreelec.env` regardless of HDD state.
-
-When sourcing this file in shell scripts, variables must be exported so `docker-compose` interpolation can read them.
+`run_install.sh` copies HDD → SD, renders secrets directly into production files (compose + runtime configs), then removes `/storage/.config/secrets/libreelec.env` after install flow completes.
 
 If a token/password appears in repository content, move it to env-based configuration and treat it as exposed.
 
@@ -96,7 +94,8 @@ Expected first-run sequence on a new SD card:
 1. copy secrets from `/var/media/Kodi_Storage/secrets/libreelec.env` to `/storage/.config/secrets/libreelec.env`
 2. `install_addons.sh`
 3. `distribute_files.sh`
-4. `kodi_settings.sh` (same boot only if `jq` is already available)
+4. render production config files with explicit values
+5. `kodi_settings.sh` (same boot only if `jq` is already available)
 
 If `jq` is not available yet, expected flow is:
 

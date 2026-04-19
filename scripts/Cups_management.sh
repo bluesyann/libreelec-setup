@@ -7,7 +7,6 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/lib/logging.sh"
 
-load_secrets
 init_logger "cups_management"
 
 printer_connected() {

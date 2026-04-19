@@ -8,21 +8,10 @@ export PATH
 
 APP_ROOT="${APP_ROOT:-/storage/.config}"
 COMPOSE_FILE="${COMPOSE_FILE:-$APP_ROOT/docker-compose.yml}"
-SECRETS_FILE="${SECRETS_FILE:-$APP_ROOT/secrets/libreelec.env}"
 LOG_DIR="${LOG_DIR:-$APP_ROOT/logs}"
 
 ensure_dir() {
     [ -d "$1" ] || mkdir -p "$1"
-}
-
-load_secrets() {
-    if [ -f "$SECRETS_FILE" ]; then
-        # Export all sourced variables so docker-compose interpolation can read them.
-        set -a
-        # shellcheck disable=SC1090
-        . "$SECRETS_FILE"
-        set +a
-    fi
 }
 
 compose_bin() {

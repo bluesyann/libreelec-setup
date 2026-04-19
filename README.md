@@ -37,8 +37,10 @@ This setup orchestrates:
 Secrets are not stored in tracked files.
 
 1. Create `/var/media/Kodi_Storage/secrets/libreelec.env` with all required values (see `secrets/libreelec.env.example`).
-2. Run `./run_install.sh` — it copies the file to `/storage/.config/secrets/libreelec.env` as first step.
-3. All runtime scripts and docker-compose read from `/storage/.config/secrets/libreelec.env` so the system starts normally even if the HDD is offline.
+2. Run `./run_install.sh`.
+3. Installer copies the secrets file to `/storage/.config/secrets/libreelec.env`, renders secrets directly into production files (`/storage/.config/docker-compose.yml` and `/storage/.config/scripts/feed_weather_db.sh`), then removes `/storage/.config/secrets/libreelec.env` after install completes.
+
+After install, runtime no longer depends on a `.env` file.
 
 Main variables used by scripts/compose:
 
@@ -49,7 +51,7 @@ Main variables used by scripts/compose:
 - `CUPS_ADMIN`, `CUPS_PASSWORD`
 - `KODI_WEBSERVER_USER`, `KODI_WEBSERVER_PASSWORD`
 
-The runtime scripts source this file with exported variables before running `docker-compose`, so Compose interpolation can consume those values without hardcoding credentials in `docker-compose.yml`.
+The secrets file is used only during install-time rendering.
 
 ## Logging
 
@@ -85,7 +87,8 @@ It executes:
 1. copy secrets from `/var/media/Kodi_Storage/secrets/libreelec.env` to `/storage/.config/secrets/libreelec.env`
 2. `install_addons.sh`
 3. `distribute_files.sh`
-4. `kodi_settings.sh` (only if `jq` is already available)
+4. render production config files with explicit values
+5. `kodi_settings.sh` (only if `jq` is already available)
 
 `autostart.sh` is intentionally deployed only in second pass.
 
@@ -102,7 +105,7 @@ Optional explicit phases:
 ./run_install.sh post-reboot
 ```
 
-`post-reboot` deploys `/storage/.config/autostart.sh` and then runs `kodi_settings.sh`.
+`post-reboot` copies secrets, deploys `/storage/.config/autostart.sh`, runs `kodi_settings.sh`, re-renders production files, then removes install-time secrets file.
 
 ## Runtime Notes
 
@@ -117,6 +120,12 @@ Optional explicit phases:
 
 ```sh
 /storage/.config/scripts/update_containers.sh
+```
+
+- Validate rendered compose file manually:
+
+```sh
+/storage/compose/docker-compose -f /storage/.config/docker-compose.yml config
 ```
 
 - Ensure scripts stay POSIX/Bash-lite for BusyBox compatibility.

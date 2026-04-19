@@ -7,7 +7,6 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/lib/logging.sh"
 
-load_secrets
 init_logger "feed_weather_db"
 
 WEATHER_STATION_IP="${WEATHER_STATION_IP:-192.168.1.100}"
