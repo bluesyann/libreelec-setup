@@ -1,0 +1,152 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8081
+      - TORRENTING_PORT=6881
+    ports:
+      - "8081:8081"
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - type: bind
+        source: /storage/.config/qbittorrent
+        target: /config
+      - type: bind
+        source: /media/Kodi_Storage/downloads
+        target: /downloads
+    restart: no
+    
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=7878
+    ports:
+      - "7878:7878"
+    volumes:
+      - type: bind
+        source: /storage/.config/radarr
+        target: /config
+      - type: bind
+        source: /var/media/Kodi_Storage
+        target: /media
+    restart: no
+    
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=9696
+    ports:
+      - "9696:9696"
+    volumes:
+      - type: bind
+        source: /storage/.config/prowlarr
+        target: /config
+      - type: bind
+        source: /var/media/Kodi_Storage/downloads
+        target: /downloads
+    restart: no
+
+  solvearr:
+    image: nabilak/solvearr
+    container_name: solvearr
+    ports:
+      - 8191:8191
+    restart: no
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8686
+    volumes:
+      - type: bind
+        source: /storage/.config/lidarr
+        target: /config
+        #Cleaned music after download
+      - type: bind
+        source: /var/media/Kodi_Storage/music
+        target: /music
+        #downloads folder, where  qbittorrent writes
+      - type: bind
+        source: /var/media/Kodi_Storage/downloads
+        target: /downloads
+    ports:
+      - 8686:8686
+    restart: no
+
+
+  syncthing:
+    image: ghcr.io/linuxserver/syncthing
+    container_name: syncthing
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      # syncthing config
+      - type: bind
+        source: /storage/.config/syncthing 
+        target: /config
+      # Lidarr tagged MP3 library
+      - type: bind
+        source: /var/media/Kodi_Storage/music
+        target: /music
+     # Clean music collection
+      - type: bind
+        source: /var/media/Kodi_Storage/Musique
+        target: /Musique
+    ports:
+      - 8384:8384
+      - 22000:22000
+      - 21027:21027/udp
+    restart: no
+
+
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - ND_SCANSCHEDULE=1h
+      - ND_EXCLUDEDFILEEXTENSIONS=flac,wav,aiff
+      - ND_TRANSCODING_ENABLED=true
+      - ND_PLAYBACK_BUFFERSECS=5
+      - ND_LOGLEVEL=info
+      - ND_SCANNER_SCANONSTARTUP=false
+      - ND_SCANNER_ENABLED=false
+     
+    volumes:
+      # Navidrome config
+      - type: bind
+        source: /storage/.config/navidrome 
+        target: /data
+      # Final tagged MP3 library
+      - type: bind
+        source: /var/media/Kodi_Storage/music
+        target: /music
+        read_only: true
+       #Read-only musique from the computer
+      - type: bind
+        source: /var/media/Kodi_Storage/Musique
+        target: /Musique_ordi
+        read_only: true
+    ports:
+      - 4533:4533
+    restart: no  

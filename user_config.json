@@ -1,0 +1,22 @@
+{
+    "addons.unknownsources": "true",
+    "locale.language": "resource.language.fr_fr",
+    "locale.keyboardlayouts": "French AZERTY",
+    "locale.country": "France",
+    "locale.timezonecountry": "France",
+    "locale.timezone": "Europe/Paris",
+    "locale.disableforaudio": "false",
+    "screensaver.disableforaudio": "false",
+    "videolibrary.updateonstartup": "false",
+    "musiclibrary.updateonstartup": "false",
+    "musiclibrary.artworklevel": "2",
+    "musiclibrary.usealllocalart": "true",
+    "dvds.autorun": "true",
+    "subtitles.languages": "English,French",
+    "services.webserver": "true",
+    "services.webserverusername": "defuser",
+    "services.webserverpassword": "defpass",
+    "services.esallinterfaces": "true",
+    "audiooutput.audiodevice": "ALSA:@:CARD=DAC,DEV=0|USB Audio DAC",
+    "input.libinputkeyboardlayout": "fr"
+}
