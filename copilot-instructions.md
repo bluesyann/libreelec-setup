@@ -90,7 +90,13 @@ Expected first-run sequence on a new SD card:
 
 1. `install_addons.sh`
 2. `distribute_files.sh`
-3. `kodi_settings.sh`
+3. `kodi_settings.sh` (same boot only if `jq` is already available)
+
+If `jq` is not available yet, expected flow is:
+
+1. Run `./run_install.sh` (or `./run_install.sh pre-reboot`)
+2. Reboot LibreELEC
+3. Run `./run_install.sh post-reboot`
 
 Manual confirmation in Kodi is expected and accepted.
 

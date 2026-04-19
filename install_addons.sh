@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 #cd .kodi/addons/
 #wget https://github.com/castagnait/repository.castagnait/raw/kodi/repository.castagnait-2.0.1.zip
 #unzip repository.castagnait-2.0.1.zip
@@ -19,6 +21,57 @@ wait_for_subfolder() {
 }
 
 pluginloc="/storage/.kodi/addons/"
+composedir="/storage/compose"
+compose_target="$composedir/docker-compose"
+
+resolve_compose_arch() {
+    _arch="$1"
+    case "$_arch" in
+        armv7l|armv7)
+            echo "armv7"
+            ;;
+        aarch64|arm64)
+            echo "aarch64"
+            ;;
+        x86_64|amd64)
+            echo "x86_64"
+            ;;
+        *)
+            echo "$_arch"
+            ;;
+    esac
+}
+
+install_compose_binary() {
+    arch_raw="$(uname -m)"
+    arch="$(resolve_compose_arch "$arch_raw")"
+
+    mkdir -p "$composedir"
+
+    compose_version="$(curl -fsSL https://api.github.com/repos/docker/compose/releases/latest | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
+
+    if [ -z "$compose_version" ]; then
+        echo "Warning: unable to detect latest docker-compose release"
+        return 1
+    fi
+
+    compose_url="https://github.com/docker/compose/releases/download/${compose_version}/docker-compose-linux-${arch}"
+    echo "Getting $compose_url"
+
+    if ! curl -fSL "$compose_url" -o "$compose_target"; then
+        echo "Warning: docker-compose download failed for arch '$arch'"
+        return 1
+    fi
+
+    chmod +x "$compose_target"
+
+    if [ -d /storage/bin ]; then
+        cp "$compose_target" /storage/bin/docker-compose
+        chmod +x /storage/bin/docker-compose
+    fi
+
+    return 0
+}
 
 # List of addons to install
 addons="plugin.video.netflix plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles service.system.docker resource.language.fr_fr"
@@ -29,28 +82,17 @@ for addon in $addons; do
     kodi-send --action="InstallAddon($addon)"
     wait_for_subfolder "$pluginloc" "$addon"
     echo "$addon installed!"
+    sleep 2
 done
 
-
-# Install the last version of docker-compose for local architecture
-arch=$(uname -m)
-if [ "$arch" = "armv7l" ]; then
-    arch="armv7"
-fi
-
-if [ "$arch" = "aarch64" ]; then
-    arch="aarch64"
-fi
-
-composedir="/storage/compose"
-mkdir -p "$composedir"
-compose_version=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
-compose_url="https://github.com/docker/compose/releases/download/${compose_version}/docker-compose-$arch"
-echo "Getting $compose_url"
-curl -fSL "$compose_url" -o "$composedir/docker-compose"
-chmod +x "$composedir/docker-compose"
-
-if [ -d /storage/bin ]; then
-    cp "$composedir/docker-compose" /storage/bin/docker-compose
-    chmod +x /storage/bin/docker-compose
+if ! install_compose_binary; then
+    if command -v docker-compose >/dev/null 2>&1; then
+        echo "Using existing docker-compose from PATH"
+        if [ -d /storage/bin ]; then
+            cp "$(command -v docker-compose)" /storage/bin/docker-compose
+            chmod +x /storage/bin/docker-compose
+        fi
+    else
+        echo "Warning: docker-compose is not installed yet. Re-run install_addons.sh after reboot."
+    fi
 fi

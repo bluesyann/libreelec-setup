@@ -84,7 +84,20 @@ It executes:
 
 1. `install_addons.sh`
 2. `distribute_files.sh`
-3. `kodi_settings.sh`
+3. `kodi_settings.sh` (only if `jq` is already available)
+
+If `jq` is not available on first boot, reboot LibreELEC and run:
+
+```sh
+./run_install.sh post-reboot
+```
+
+Optional explicit phases:
+
+```sh
+./run_install.sh pre-reboot
+./run_install.sh post-reboot
+```
 
 ## Runtime Notes
 
