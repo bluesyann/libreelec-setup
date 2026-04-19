@@ -3,45 +3,9 @@
 set -eu
 
 MODE="${1:-all}"
-DEPLOY_COMPOSE_FILE="/storage/.config/docker-compose.yml"
 HDD_SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
 DEPLOY_SECRETS_FILE="/storage/.config/secrets/libreelec.env"
 
-
-compose_bin() {
-	if [ -x "/storage/compose/docker-compose" ]; then
-		echo "/storage/compose/docker-compose"
-		return 0
-	fi
-	if command -v docker-compose >/dev/null 2>&1; then
-		command -v docker-compose
-		return 0
-	fi
-	return 1
-}
-
-warm_up_containers() {
-	_compose="$(compose_bin)" || {
-		echo "docker-compose not found, skipping container warm-up"
-		return 0
-	}
-
-	if [ ! -f "$DEPLOY_COMPOSE_FILE" ]; then
-		echo "Compose file not found at $DEPLOY_COMPOSE_FILE, skipping warm-up"
-		return 0
-	fi
-
-	if [ -f "$DEPLOY_SECRETS_FILE" ]; then
-		# shellcheck disable=SC1090
-		. "$DEPLOY_SECRETS_FILE"
-	fi
-
-	echo "Pulling container images before reboot"
-	"$_compose" -f "$DEPLOY_COMPOSE_FILE" pull || echo "Warning: image pull had errors"
-
-	echo "Starting containers once before reboot"
-	"$_compose" -f "$DEPLOY_COMPOSE_FILE" up -d || echo "Warning: some containers failed to start"
-}
 
 copy_secrets() {
 	if [ ! -f "$HDD_SECRETS_FILE" ]; then
@@ -54,15 +18,25 @@ copy_secrets() {
 	echo "Copied secrets to $DEPLOY_SECRETS_FILE"
 }
 
+deploy_autostart() {
+	if [ ! -f "autostart.sh" ]; then
+		echo "Error: autostart.sh not found in repository root"
+		exit 1
+	fi
+	cp "autostart.sh" "/storage/.config/autostart.sh"
+	chmod +x "/storage/.config/autostart.sh" || true
+	echo "Copied autostart.sh -> /storage/.config/autostart.sh"
+}
+
 run_phase1() {
 	copy_secrets
 	./install_addons.sh
-	./distribute_files.sh --no-autostart
-	warm_up_containers
+	./distribute_files.sh
 }
 
 run_phase2() {
-	./distribute_files.sh --with-autostart
+	copy_secrets
+	deploy_autostart
 	./kodi_settings.sh
 }
 

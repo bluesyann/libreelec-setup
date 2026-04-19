@@ -54,6 +54,22 @@ launch_monitor() {
     fi
 }
 
+start_compose_stack() {
+    _attempt=1
+    while [ "$_attempt" -le 2 ]; do
+        if timeout 300 compose up -d 2>&1; then
+            log_info "docker-compose stack started (attempt $_attempt)"
+            return 0
+        fi
+
+        log_warn "docker-compose stack startup failed or timed out (attempt $_attempt)"
+        _attempt=$((_attempt + 1))
+        sleep 15
+    done
+
+    return 1
+}
+
 log_info "Autostart sequence started"
 
 chmod 666 /var/run/docker.sock 2>/dev/null || true
@@ -72,10 +88,10 @@ chown -R "${PUID:-1000}:${PGID:-1000}" "$STORAGE_ROOT" >/dev/null 2>&1 || log_wa
 chmod -R 777 "$STORAGE_ROOT" >/dev/null 2>&1 || log_warn "Failed to update permissions on $STORAGE_ROOT"
 
 sleep 60
-if timeout 300 compose up -d 2>&1; then
-    log_info "docker-compose stack started"
+if start_compose_stack; then
+    :
 else
-    log_error "docker-compose stack startup failed or timed out"
+    log_error "docker-compose stack failed after retries"
 fi
 
 sleep 20

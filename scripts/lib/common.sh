@@ -17,8 +17,11 @@ ensure_dir() {
 
 load_secrets() {
     if [ -f "$SECRETS_FILE" ]; then
+        # Export all sourced variables so docker-compose interpolation can read them.
+        set -a
         # shellcheck disable=SC1090
         . "$SECRETS_FILE"
+        set +a
     fi
 }
 

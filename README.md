@@ -25,7 +25,7 @@ This setup orchestrates:
 - `docker-compose.yml`: container stack definition
 - `run_install.sh`: high-level install sequence
 - `install_addons.sh`: Kodi add-on install + docker-compose binary download
-- `distribute_files.sh`: deploys repo content to `/storage/.config`
+- `distribute_files.sh`: deploys repo content to `/storage/.config` (except `autostart.sh`)
 - `kodi_settings.sh`: applies settings from `user_config.json` into Kodi XML
 - `scripts/lib/common.sh`: shared runtime helpers (compose path, secrets load)
 - `scripts/lib/logging.sh`: shared logging helpers for all background shell scripts
@@ -49,7 +49,7 @@ Main variables used by scripts/compose:
 - `CUPS_ADMIN`, `CUPS_PASSWORD`
 - `KODI_WEBSERVER_USER`, `KODI_WEBSERVER_PASSWORD`
 
-The runtime scripts source this file before running `docker-compose`, so Compose interpolation can consume those values without hardcoding credentials in `docker-compose.yml`.
+The runtime scripts source this file with exported variables before running `docker-compose`, so Compose interpolation can consume those values without hardcoding credentials in `docker-compose.yml`.
 
 ## Logging
 
@@ -82,12 +82,12 @@ Then run:
 
 It executes:
 
-1. `install_addons.sh`
-2. `distribute_files.sh --no-autostart`
-3. container warm-up (`docker-compose pull` then `up -d`) before reboot
+1. copy secrets from `/var/media/Kodi_Storage/secrets/libreelec.env` to `/storage/.config/secrets/libreelec.env`
+2. `install_addons.sh`
+3. `distribute_files.sh`
 4. `kodi_settings.sh` (only if `jq` is already available)
 
-`autostart.sh` is intentionally deployed only in second pass to avoid boot-time race conditions during initial setup.
+`autostart.sh` is intentionally deployed only in second pass.
 
 If `jq` is not available on first boot, reboot LibreELEC and run:
 
@@ -102,7 +102,7 @@ Optional explicit phases:
 ./run_install.sh post-reboot
 ```
 
-`post-reboot` performs `distribute_files.sh --with-autostart` and then `kodi_settings.sh`.
+`post-reboot` deploys `/storage/.config/autostart.sh` and then runs `kodi_settings.sh`.
 
 ## Runtime Notes
 

@@ -77,6 +77,8 @@ Secrets must never be hardcoded in tracked files.
 
 `run_install.sh` copies HDD → SD as its first step so all runtime scripts (and compose) always read from `/storage/.config/secrets/libreelec.env` regardless of HDD state.
 
+When sourcing this file in shell scripts, variables must be exported so `docker-compose` interpolation can read them.
+
 If a token/password appears in repository content, move it to env-based configuration and treat it as exposed.
 
 ## Installer Flow
@@ -91,9 +93,9 @@ Expected first-run sequence on a new SD card:
 
 `run_install.sh` orchestrates:
 
-1. `install_addons.sh`
-2. `distribute_files.sh --no-autostart`
-3. pre-reboot container warm-up (`docker-compose pull` + `up -d`)
+1. copy secrets from `/var/media/Kodi_Storage/secrets/libreelec.env` to `/storage/.config/secrets/libreelec.env`
+2. `install_addons.sh`
+3. `distribute_files.sh`
 4. `kodi_settings.sh` (same boot only if `jq` is already available)
 
 If `jq` is not available yet, expected flow is:

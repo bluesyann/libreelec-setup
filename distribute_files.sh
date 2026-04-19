@@ -4,7 +4,6 @@ set -eu
 
 DESTINATION="/storage/.config"
 DB_BACKUP="/var/media/Kodi_Storage/db-backup"
-AUTOSTART_MODE="${1:---no-autostart}"
 
 FOLDERS="
 prowlarr
@@ -46,19 +45,7 @@ for folder in $FOLDERS; do
     fi
 done
 
-echo "Copying top-level scripts"
-case "$AUTOSTART_MODE" in
-    --with-autostart)
-        copy_required_file "autostart.sh" "$DESTINATION/autostart.sh"
-        ;;
-    --no-autostart)
-        echo "Skipping autostart deployment for this pass"
-        ;;
-    *)
-        echo "Usage: ./distribute_files.sh [--no-autostart|--with-autostart]"
-        exit 1
-        ;;
-esac
+echo "Copying top-level files"
 copy_required_file "docker-compose.yml" "$DESTINATION/docker-compose.yml"
 copy_required_file "README.md" "$DESTINATION/README.md"
 
@@ -69,9 +56,6 @@ else
     echo "Warning: database backup folder missing: $DB_BACKUP"
 fi
 
-if [ -f "$DESTINATION/autostart.sh" ]; then
-    chmod +x "$DESTINATION/autostart.sh" || true
-fi
 find "$DESTINATION/scripts" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
 
 echo "Distribution completed"
