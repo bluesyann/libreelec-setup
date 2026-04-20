@@ -36,6 +36,9 @@ System administration is performed via Kodi UI, Kore app, container web UIs, and
 
 Design rule: keep OS and config on SD card so HDD can sleep when idle.
 
+Full container backups are stored outside the repository in `/var/media/Kodi_Storage/containers-backup`.
+Repository-managed content is intentionally limited to lightweight custom code and top-level orchestration files.
+
 ## Services Managed by Docker
 
 - qBittorrent
@@ -64,7 +67,7 @@ Design rule: keep OS and config on SD card so HDD can sleep when idle.
 
 - Background scripts must use shared logging helpers in `scripts/lib/logging.sh`
 - Logs are written to `/storage/.config/logs/*.log`
-- Installer scripts (`run_install.sh`, `install_addons.sh`, `distribute_files.sh`, `kodi_settings.sh`) may use simple prints only
+- Installer scripts (`install_addons.sh`, `distribute_files.sh`, `kodi_settings.sh`) may use simple prints only
 
 ## Secret Handling Policy
 
@@ -72,10 +75,9 @@ Secrets must never be hardcoded in tracked files.
 
 - Template: `secrets/libreelec.env.example`
 - Source before install: `/var/media/Kodi_Storage/secrets/libreelec.env` (on data drive, not tracked)
-- Install-time file on target: `/storage/.config/secrets/libreelec.env` (temporary, copied by installer)
 - `docker-compose.yml` must use environment interpolation for secrets and credentials
 
-`run_install.sh` copies HDD → SD, renders secrets directly into production files (compose + runtime configs), then removes `/storage/.config/secrets/libreelec.env` after install flow completes.
+`distribute_files.sh` reads `/var/media/Kodi_Storage/secrets/libreelec.env` directly and renders secrets into production files in `/storage/.config`.
 
 If a token/password appears in repository content, move it to env-based configuration and treat it as exposed.
 
@@ -86,22 +88,12 @@ Expected first-run sequence on a new SD card:
 1. Flash latest LibreELEC image
 2. Boot once, configure network + enable SSH
 3. Clone this repository on the device
-4. Run `./run_install.sh`
-5. Confirm Kodi add-on prompts manually in GUI when required
+4. Run `./install_addons.sh`
+5. Run `./distribute_files.sh`
+6. Run `./kodi_settings.sh`
+7. Confirm Kodi add-on prompts manually in GUI when required
 
-`run_install.sh` orchestrates:
-
-1. copy secrets from `/var/media/Kodi_Storage/secrets/libreelec.env` to `/storage/.config/secrets/libreelec.env`
-2. `install_addons.sh`
-3. `distribute_files.sh`
-4. render production config files with explicit values
-5. `kodi_settings.sh` (same boot only if `jq` is already available)
-
-If `jq` is not available yet, expected flow is:
-
-1. Run `./run_install.sh` (or `./run_install.sh pre-reboot`)
-2. Reboot LibreELEC
-3. Run `./run_install.sh post-reboot` (deploys autostart + applies Kodi settings)
+`distribute_files.sh` restores `/var/media/Kodi_Storage/containers-backup` into `/storage/.config`, copies repository-managed files (`weather`, `flactomp3`, `scripts`, `autostart.sh`, `docker-compose.yml`), and renders secrets directly into final runtime files.
 
 Manual confirmation in Kodi is expected and accepted.
 

@@ -2,11 +2,14 @@
 
 set -eu
 
-SECRETS_FILE="/storage/.config/secrets/libreelec.env"
+SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
 
 if [ -f "$SECRETS_FILE" ]; then
     # shellcheck disable=SC1090
     . "$SECRETS_FILE"
+else
+    echo "Error: secrets file not found: $SECRETS_FILE"
+    exit 1
 fi
 
 change_xmlval() {

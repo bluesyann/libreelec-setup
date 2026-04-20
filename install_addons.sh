@@ -69,7 +69,7 @@ install_compose_binary() {
 
 # List of addons to install
 # when pc sorted, add plugin.video.netflix 
-addons="plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles service.system.docker resource.language.fr_fr"
+addons="virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles service.system.docker resource.language.fr_fr"
 
 # Run the install
 for addon in $addons; do
@@ -79,11 +79,3 @@ for addon in $addons; do
     echo "$addon installed!"
     sleep 2
 done
-
-if ! install_compose_binary; then
-    if command -v docker-compose >/dev/null 2>&1; then
-        echo "Using existing docker-compose from PATH"
-    else
-        echo "Warning: docker-compose is not installed yet. Re-run install_addons.sh after reboot."
-    fi
-fi

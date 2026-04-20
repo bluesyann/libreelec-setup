@@ -23,24 +23,27 @@ This setup orchestrates:
 
 - `autostart.sh`: startup orchestrator run by LibreELEC
 - `docker-compose.yml`: container stack definition
-- `run_install.sh`: high-level install sequence
 - `install_addons.sh`: Kodi add-on install + docker-compose binary download
-- `distribute_files.sh`: deploys repo content to `/storage/.config` (except `autostart.sh`)
+- `distribute_files.sh`: deploys repo content to `/storage/.config`, restores container backups, and renders final runtime files
 - `kodi_settings.sh`: applies settings from `user_config.json` into Kodi XML
-- `scripts/lib/common.sh`: shared runtime helpers (compose path, secrets load)
+- `scripts/lib/common.sh`: shared runtime helpers (compose path)
 - `scripts/lib/logging.sh`: shared logging helpers for all background shell scripts
 - `scripts/*.sh`: long-running monitors/maintenance scripts
 - `secrets/libreelec.env.example`: template of required secret values
+
+Full container backups are stored outside the repository in `/var/media/Kodi_Storage/containers-backup` and restored by `distribute_files.sh`.
+Only lightweight custom code remains in git: `weather`, `flactomp3`, `scripts`, plus top-level orchestration files.
 
 ## Secret Management
 
 Secrets are not stored in tracked files.
 
 1. Create `/var/media/Kodi_Storage/secrets/libreelec.env` with all required values (see `secrets/libreelec.env.example`).
-2. Run `./run_install.sh`.
-3. Installer copies the secrets file to `/storage/.config/secrets/libreelec.env`, renders secrets directly into production files (`/storage/.config/docker-compose.yml` and `/storage/.config/scripts/feed_weather_db.sh`), then removes `/storage/.config/secrets/libreelec.env` after install completes.
+2. Run `./distribute_files.sh`.
+3. `distribute_files.sh` restores backups from `/var/media/Kodi_Storage/containers-backup`, then renders secrets directly into production files (`/storage/.config/docker-compose.yml` and `/storage/.config/scripts/feed_weather_db.sh`).
+4. Run `./kodi_settings.sh` to apply Kodi web server credentials and GUI settings.
 
-After install, runtime no longer depends on a `.env` file.
+Runtime does not depend on a `.env` file.
 
 Main variables used by scripts/compose:
 
@@ -51,7 +54,7 @@ Main variables used by scripts/compose:
 - `CUPS_ADMIN`, `CUPS_PASSWORD`
 - `KODI_WEBSERVER_USER`, `KODI_WEBSERVER_PASSWORD`
 
-The secrets file is used only during install-time rendering.
+The secrets file is used only by installer scripts.
 
 ## Logging
 
@@ -76,36 +79,15 @@ Prerequisites before running this repo:
 3. Attach backup/secret USB drive if used.
 4. Clone this repository on the device.
 
-Then run:
+Then run, in order:
 
 ```sh
-./run_install.sh
+./install_addons.sh
+./distribute_files.sh
+./kodi_settings.sh
 ```
 
-It executes:
-
-1. copy secrets from `/var/media/Kodi_Storage/secrets/libreelec.env` to `/storage/.config/secrets/libreelec.env`
-2. `install_addons.sh`
-3. `distribute_files.sh`
-4. render production config files with explicit values
-5. `kodi_settings.sh` (only if `jq` is already available)
-
-`autostart.sh` is intentionally deployed only in second pass.
-
-If `jq` is not available on first boot, reboot LibreELEC and run:
-
-```sh
-./run_install.sh post-reboot
-```
-
-Optional explicit phases:
-
-```sh
-./run_install.sh pre-reboot
-./run_install.sh post-reboot
-```
-
-`post-reboot` copies secrets, deploys `/storage/.config/autostart.sh`, runs `kodi_settings.sh`, re-renders production files, then removes install-time secrets file.
+Use `install_addons.sh` first so the docker-compose binary, Kodi add-ons, and prerequisite tools are installed before you distribute files.
 
 ## Runtime Notes
 

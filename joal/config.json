@@ -1,8 +1,0 @@
-{
-  "minUploadRate" : 10,
-  "maxUploadRate" : 1000,
-  "simultaneousSeed" : 20,
-  "client" : "qbittorrent-4.6.7.client",
-  "keepTorrentWithZeroLeechers" : true,
-  "uploadRatioTarget" : 1.8
-}
