@@ -21,22 +21,22 @@ services:
         target: /downloads
     restart: unless-stopped
 
-  joal:
-    image: anthonyraymond/joal:latest
-    container_name: joal
-    volumes:
-      - type: bind
-        source: /storage/.config/joal
-        target: /data
-    ports:
-      - "6060:8080"
-    command:
-      - "--joal-conf=/data"
-      - "--spring.main.web-environment=true"
-      - "--server.port=8080"
-      - "--joal.ui.path.prefix=${JOAL_UI_PATH_PREFIX}"
-      - "--joal.ui.secret-token=${JOAL_UI_SECRET_TOKEN}"
-    restart: unless-stopped
+  # joal:
+  #   image: anthonyraymond/joal:latest
+  #   container_name: joal
+  #   volumes:
+  #     - type: bind
+  #       source: /storage/.config/joal
+  #       target: /data
+  #   ports:
+  #     - "6060:8080"
+  #   command:
+  #     - "--joal-conf=/data"
+  #     - "--spring.main.web-environment=true"
+  #     - "--server.port=8080"
+  #     - "--joal.ui.path.prefix=${JOAL_UI_PATH_PREFIX}"
+  #     - "--joal.ui.secret-token=${JOAL_UI_SECRET_TOKEN}"
+  #   restart: unless-stopped
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest

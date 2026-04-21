@@ -3,7 +3,7 @@
 # Convert files from one audio extension to mp3.
 
 log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] [flac2mp3] $*"
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] [dir2mp3] $*"
 }
 
 if [ "$#" -ne 2 ]; then
@@ -13,24 +13,21 @@ fi
 
 log "Starting conversion run"
 
-dossier="$1"
+folder="$1"
 extension="$2"
 total=0
 
-# Build the container: (watch the point at the end !)
-# LibreELEC:~/.config/flactomp3 # docker build -t flac2mp3 .
-
 # Maunual run on Navidrome librairy (/media/Kodi_Storage/music/)
-# docker run --rm -v /media/Kodi_Storage/music:/music flac2mp3 /music flac
+# ./convert_dir2mp3.sh /music flac
 # Cron entry (every hour):
-# 0 * * * * /storage/.kodi/addons/service.system.docker/bin/docker run --rm -v /media/Kodi_Storage/music:/music flac2mp3 /music flac >> /storage/.config/flac-convert.log 2>&1
+# 0 * * * * convert_dir2mp3.sh /media/Kodi_Storage/music/ flac
 
-log "Directory: $dossier"
+log "Directory: $folder"
 log "Extension: .$extension"
 
-if [ -d "$dossier" ]; then
-    total="$(find "$dossier" -name "*.$extension" | wc -l)"
-    find "$dossier" -name "*.$extension" | while IFS= read -r fichier; do
+if [ -d "$folder" ]; then
+    total="$(find "$folder" -name "*.$extension" | wc -l)"
+    find "$folder" -name "*.$extension" | while IFS= read -r fichier; do
         out="${fichier%.$extension}.mp3"
         log "Converting $fichier -> $out"
         
@@ -45,9 +42,8 @@ if [ -d "$dossier" ]; then
         sleep 1
     done
 else
-    log "Invalid directory: $dossier"
+    log "Invalid directory: $folder"
     exit 1
 fi
 
 log "$total files processed"
-

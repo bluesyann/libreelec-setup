@@ -8,7 +8,7 @@ HDD_SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
 DEPLOY_COMPOSE_FILE="$DESTINATION/docker-compose.yml"
 DEPLOY_WEATHER_SCRIPT="$DESTINATION/scripts/feed_weather_db.sh"
 
-FOLDERS="weather flactomp3 scripts"
+FOLDERS="weather scripts"
 
 copy_required_file() {
     _src="$1"
@@ -135,5 +135,16 @@ render_weather_script
 
 chmod +x "$DESTINATION/autostart.sh" 2>/dev/null || true
 find "$DESTINATION/scripts" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+
+echo "Building custom Docker images"
+_compose="$(compose_bin)" || {
+    echo "Error: docker-compose binary not found, skipping image builds"
+    _compose=""
+}
+
+if [ -n "$_compose" ]; then
+    echo "Building weatherpage image..."
+    "$_compose" -f "$DEPLOY_COMPOSE_FILE" build weatherpage
+fi
 
 echo "Distribution completed"

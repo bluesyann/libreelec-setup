@@ -32,7 +32,7 @@ This setup orchestrates:
 - `secrets/libreelec.env.example`: template of required secret values
 
 Full container backups are stored outside the repository in `/var/media/Kodi_Storage/containers-backup` and restored by `distribute_files.sh`.
-Only lightweight custom code remains in git: `weather`, `flactomp3`, `scripts`, plus top-level orchestration files.
+Only lightweight custom code remains in git: `weather`, `scripts`, plus top-level orchestration files.
 
 ## Secret Management
 

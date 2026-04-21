@@ -69,7 +69,7 @@ install_compose_binary() {
 
 # List of addons to install
 # when pc sorted, add plugin.video.netflix 
-addons="virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles service.system.docker resource.language.fr_fr"
+addons="tools.ffmpeg-tools virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles service.system.docker resource.language.fr_fr"
 
 # Run the install
 for addon in $addons; do

@@ -93,7 +93,7 @@ Expected first-run sequence on a new SD card:
 6. Run `./kodi_settings.sh`
 7. Confirm Kodi add-on prompts manually in GUI when required
 
-`distribute_files.sh` restores `/var/media/Kodi_Storage/containers-backup` into `/storage/.config`, copies repository-managed files (`weather`, `flactomp3`, `scripts`, `autostart.sh`, `docker-compose.yml`), and renders secrets directly into final runtime files.
+`distribute_files.sh` restores `/var/media/Kodi_Storage/containers-backup` into `/storage/.config`, copies repository-managed files (`weather`, `scripts`, `autostart.sh`, `docker-compose.yml`), and renders secrets directly into final runtime files.
 
 Manual confirmation in Kodi is expected and accepted.
 
