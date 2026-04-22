@@ -7,6 +7,7 @@ CONTAINERS_BACKUP="/var/media/Kodi_Storage/containers-backup"
 HDD_SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
 DEPLOY_COMPOSE_FILE="$DESTINATION/docker-compose.yml"
 DEPLOY_WEATHER_SCRIPT="$DESTINATION/scripts/feed_weather_db.sh"
+DEPLOY_APP_PY="$DESTINATION/weather/app.py"
 
 FOLDERS="weather scripts"
 
@@ -100,6 +101,30 @@ render_weather_script() {
     echo "Rendered secrets into $DEPLOY_WEATHER_SCRIPT"
 }
 
+render_app_py() {
+    if [ ! -f "$DEPLOY_APP_PY" ]; then
+        echo "Warning: weather app.py missing at $DEPLOY_APP_PY"
+        return 0
+    fi
+
+    _db_host="$(escape_dq "${WEATHER_DB_HOST:-mariadb}")"
+    _db_name="$(escape_dq "${MARIADB_DATABASE:-WeatherData}")"
+    _db_user="$(escape_dq "${WEATHER_DB_USER:-root}")"
+    _db_pass="$(escape_dq "${WEATHER_DB_PASSWORD:-${MARIADB_ROOT_PASSWORD:-}}")"
+    _db_port="${WEATHER_DB_PORT:-3306}"
+
+    sed \
+        -e "s|@@WEATHER_DB_HOST@@|$_db_host|g" \
+        -e "s|@@WEATHER_DB_NAME@@|$_db_name|g" \
+        -e "s|@@WEATHER_DB_USER@@|$_db_user|g" \
+        -e "s|@@WEATHER_DB_PASSWORD@@|$_db_pass|g" \
+        -e "s|@@WEATHER_DB_PORT@@|$_db_port|g" \
+        "$DEPLOY_APP_PY" > "$DEPLOY_APP_PY.rendered"
+
+    mv "$DEPLOY_APP_PY.rendered" "$DEPLOY_APP_PY"
+    echo "Rendered secrets into $DEPLOY_APP_PY"
+}
+
 if [ ! -d "$DESTINATION" ]; then
     echo "Error: destination folder missing: $DESTINATION"
     exit 1
@@ -132,6 +157,7 @@ copy_required_file "README.md" "$DESTINATION/README.md"
 load_install_secrets
 render_compose_file
 render_weather_script
+render_app_py
 
 chmod +x "$DESTINATION/autostart.sh" 2>/dev/null || true
 find "$DESTINATION/scripts" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
@@ -147,5 +173,4 @@ if [ -n "$_compose" ]; then
     "$_compose" -f "$DEPLOY_COMPOSE_FILE" build weatherpage
 fi
 
-echo "Distribution completed, starting docker containers to check for errors"
-compose_bin() && compose -f "$DEPLOY_COMPOSE_FILE" up -d
+echo "Distribution completed"

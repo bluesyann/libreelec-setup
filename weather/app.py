@@ -3,7 +3,6 @@ import pymysql
 import plotly.graph_objects as go
 import pandas as pd
 import scipy
-import os
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -12,18 +11,12 @@ def get_weather_data(days=3):
     end = datetime.now()
     start = end - timedelta(days=days)
 
-    db_host = os.getenv("WEATHER_DB_HOST", "mariadb")
-    db_name = os.getenv("WEATHER_DB_NAME", "WeatherData")
-    db_user = os.getenv("WEATHER_DB_USER", "root")
-    db_password = os.getenv("WEATHER_DB_PASSWORD", "")
-    db_port = int(os.getenv("WEATHER_DB_PORT", "3306"))
-
     conn = pymysql.connect(
-        host=db_host,
-        database=db_name,
-        user=db_user,
-        password=db_password,
-        port=db_port
+        host="@@WEATHER_DB_HOST@@",
+        database="@@WEATHER_DB_NAME@@",
+        user="@@WEATHER_DB_USER@@",
+        password="@@WEATHER_DB_PASSWORD@@",
+        port=@@WEATHER_DB_PORT@@
     )
     query = """
     SELECT
