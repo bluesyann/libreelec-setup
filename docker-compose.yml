@@ -200,11 +200,12 @@ services:
     restart: unless-stopped
 
   mariadb:
-    image: mariadb:latest
+    image: mariadb:11.4
     container_name: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MARIADB_DATABASE:-WeatherData}
+      MARIADB_AUTO_UPGRADE: "1"
     ports:
       - "3306:3306"
     volumes:
