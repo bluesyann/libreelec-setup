@@ -69,7 +69,7 @@ install_compose_binary() {
 
 # List of addons to install
 # when pc sorted, add plugin.video.netflix 
-addons="tools.ffmpeg-tools virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles service.system.docker resource.language.fr_fr"
+addons="tools.ffmpeg-tools virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles resource.language.fr_fr service.system.docker"
 
 # Run the install
 for addon in $addons; do
@@ -77,5 +77,7 @@ for addon in $addons; do
     kodi-send --action="InstallAddon($addon)"
     wait_for_subfolder "$pluginloc" "$addon"
     echo "$addon installed!"
-    sleep 2
+    sleep 1
 done
+
+install_compose_binary

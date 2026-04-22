@@ -147,4 +147,5 @@ if [ -n "$_compose" ]; then
     "$_compose" -f "$DEPLOY_COMPOSE_FILE" build weatherpage
 fi
 
-echo "Distribution completed"
+echo "Distribution completed, starting docker containers to check for errors"
+compose_bin() && compose -f "$DEPLOY_COMPOSE_FILE" up -d

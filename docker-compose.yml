@@ -200,7 +200,7 @@ services:
     restart: unless-stopped
 
   mariadb:
-    image: mariadb:11.4
+    image: mariadb:latest
     container_name: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
