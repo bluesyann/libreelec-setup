@@ -154,7 +154,6 @@ def dashboard():
 @app.route("/reboot", methods=["POST"])
 def reboot_board():
     trigger_path = "/data/reboot_trigger"
-    trigger_written = False
 
     # Always write a trigger file so host-side automation can reboot reliably.
     if trigger_path:
@@ -164,37 +163,13 @@ def reboot_board():
                 os.makedirs(trigger_dir, exist_ok=True)
             with open(trigger_path, "w", encoding="utf-8") as trigger_file:
                 trigger_file.write("1\n")
-            trigger_written = True
+                return jsonify({"status": "queued", "message": "Reboot trigger file written"}), 202
         except OSError as exc:
             app.logger.error("Failed to write reboot trigger '%s': %s", trigger_path, exc)
+            return jsonify({"status": "error", "message": "Trigger file not written"}), 500
+    else:
+        return jsonify({"status": "error", "message": "Trigger file path undefined"}), 500
 
-    # Best-effort direct reboot from container.
-    try:
-        result = subprocess.run(["reboot"], capture_output=True, text=True)
-    except FileNotFoundError:
-        if trigger_written:
-            return jsonify({"status": "queued", "message": "Reboot trigger file written"}), 202
-        return jsonify({"status": "error", "message": "Reboot command not found and trigger file not written"}), 500
-
-    if result.returncode == 0:
-        return jsonify({"status": "ok", "message": "Reboot command executed"}), 200
-
-    if trigger_written:
-        return jsonify(
-            {
-                "status": "queued",
-                "message": "Reboot command failed in container, trigger file written",
-                "stderr": (result.stderr or "").strip(),
-            }
-        ), 202
-
-    return jsonify(
-        {
-            "status": "error",
-            "message": "Reboot command failed and trigger file was not written",
-            "stderr": (result.stderr or "").strip(),
-        }
-    ), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
