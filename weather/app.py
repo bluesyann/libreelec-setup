@@ -18,7 +18,10 @@ def get_weather_data(days=3):
         database="@@WEATHER_DB_NAME@@",
         user="@@WEATHER_DB_USER@@",
         password="@@WEATHER_DB_PASSWORD@@",
-        port=int("@@WEATHER_DB_PORT@@")
+        port=int("@@WEATHER_DB_PORT@@"),
+        connect_timeout=3,
+        read_timeout=5,
+        write_timeout=5,
     )
     query = """
     SELECT
@@ -30,16 +33,49 @@ def get_weather_data(days=3):
     WHERE DateTime BETWEEN %s AND %s
     ORDER BY DateTime
     """
-    df = pd.read_sql(query, conn, params=(start, end))
+
+    with conn.cursor() as cursor:
+        cursor.execute(query, (start, end))
+        rows = cursor.fetchall()
+        columns = [column[0] for column in cursor.description]
+
     conn.close()
+    df = pd.DataFrame(rows, columns=columns)
     return df
 
 @app.route("/", methods=["GET", "POST"])
 def dashboard():
-    days = int(request.form.get("days", 3))  # Default: 3 days
-    df = get_weather_data(days)
+    try:
+        days = int(request.form.get("days", 3))  # Default: 3 days
+    except ValueError:
+        days = 3
+
+    try:
+        df = get_weather_data(days)
+    except pymysql.MySQLError as exc:
+        app.logger.warning("MariaDB unavailable: %s", exc)
+        return render_template(
+            "dashboard.html",
+            plot="",
+            temp="-",
+            hum="-",
+            press="-",
+            time="-",
+            days=days,
+            db_error="Database not ready yet. Please retry in a few seconds.",
+        ), 503
+
     if df.empty:
-        return "No data for the selected range."
+        return render_template(
+            "dashboard.html",
+            plot="",
+            temp="-",
+            hum="-",
+            press="-",
+            time="-",
+            days=days,
+            db_error="No weather data for the selected range.",
+        )
 
     # Apply a gaussian filter
     df["HumidityFiltered"]= df["Humidity"].rolling(window=20, win_type='gaussian').mean(std=8)
@@ -117,28 +153,48 @@ def dashboard():
 
 @app.route("/reboot", methods=["POST"])
 def reboot_board():
-    trigger_path = "@@WEATHER_REBOOT_TRIGGER_PATH@@"
+    trigger_path = "/data/reboot_trigger"
+    trigger_written = False
 
     # Always write a trigger file so host-side automation can reboot reliably.
     if trigger_path:
-        trigger_dir = os.path.dirname(trigger_path)
-        if trigger_dir:
-            os.makedirs(trigger_dir, exist_ok=True)
-        with open(trigger_path, "w", encoding="utf-8") as trigger_file:
-            trigger_file.write("1\n")
+        try:
+            trigger_dir = os.path.dirname(trigger_path)
+            if trigger_dir:
+                os.makedirs(trigger_dir, exist_ok=True)
+            with open(trigger_path, "w", encoding="utf-8") as trigger_file:
+                trigger_file.write("1\n")
+            trigger_written = True
+        except OSError as exc:
+            app.logger.error("Failed to write reboot trigger '%s': %s", trigger_path, exc)
 
     # Best-effort direct reboot from container.
-    result = subprocess.run(["reboot"], capture_output=True, text=True)
+    try:
+        result = subprocess.run(["reboot"], capture_output=True, text=True)
+    except FileNotFoundError:
+        if trigger_written:
+            return jsonify({"status": "queued", "message": "Reboot trigger file written"}), 202
+        return jsonify({"status": "error", "message": "Reboot command not found and trigger file not written"}), 500
+
     if result.returncode == 0:
         return jsonify({"status": "ok", "message": "Reboot command executed"}), 200
 
+    if trigger_written:
+        return jsonify(
+            {
+                "status": "queued",
+                "message": "Reboot command failed in container, trigger file written",
+                "stderr": (result.stderr or "").strip(),
+            }
+        ), 202
+
     return jsonify(
         {
-            "status": "queued",
-            "message": "Reboot command failed in container, trigger file written",
+            "status": "error",
+            "message": "Reboot command failed and trigger file was not written",
             "stderr": (result.stderr or "").strip(),
         }
-    ), 202
+    ), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

@@ -112,7 +112,6 @@ render_app_py() {
     _db_user="$(escape_dq "${WEATHER_DB_USER:-root}")"
     _db_pass="$(escape_dq "${WEATHER_DB_PASSWORD:-${MARIADB_ROOT_PASSWORD:-}}")"
     _db_port="${WEATHER_DB_PORT:-3306}"
-    _reboot_trigger="$(escape_dq "${WEATHER_REBOOT_TRIGGER_PATH:-/storage/.config/reboot_trigger}")"
 
     sed \
         -e "s|@@WEATHER_DB_HOST@@|$_db_host|g" \
@@ -120,7 +119,6 @@ render_app_py() {
         -e "s|@@WEATHER_DB_USER@@|$_db_user|g" \
         -e "s|@@WEATHER_DB_PASSWORD@@|$_db_pass|g" \
         -e "s|@@WEATHER_DB_PORT@@|$_db_port|g" \
-        -e "s|@@WEATHER_REBOOT_TRIGGER_PATH@@|$_reboot_trigger|g" \
         "$DEPLOY_APP_PY" > "$DEPLOY_APP_PY.rendered"
 
     mv "$DEPLOY_APP_PY.rendered" "$DEPLOY_APP_PY"
@@ -176,6 +174,6 @@ if [ -n "$_compose" ]; then
 fi
 
 echo "Updating crontabs..."
-crontabs < crontab.reference
+crontab crontab.reference
 
 echo "Distribution completed"

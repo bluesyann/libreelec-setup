@@ -217,6 +217,10 @@ services:
   weatherpage:
     build: /storage/.config/weather
     container_name: weatherpage
+    volumes:
+      - type: bind
+        source: /storage/.config/weather
+        target: /data
     environment:
       WEATHER_DB_HOST: mariadb
       WEATHER_DB_NAME: ${MARIADB_DATABASE:-WeatherData}
