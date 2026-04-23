@@ -4,4 +4,3 @@
 30 3 * * 1 /storage/.config/scripts/update_containers.sh
 30 3 * * 2 /storage/.config/scripts/containers_backup.sh
 30 3 * * 3 reboot
-5 4 * * * /storage/.kodi/userdata/addon_data/docker.linuxserver.updater/update.sh >> /storage/.config/logs/dockerupdate.log 2>&1 && /storage/.kodi/userdata/addon_data/docker.linuxserver.updater/prune.sh >> /storage/.config/logs/dockerprune.log  2>&1
