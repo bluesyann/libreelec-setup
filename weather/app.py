@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, render_template, request
 import pymysql
 import plotly.graph_objects as go
 import pandas as pd
 import scipy
+import os
+import subprocess
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -16,7 +18,7 @@ def get_weather_data(days=3):
         database="@@WEATHER_DB_NAME@@",
         user="@@WEATHER_DB_USER@@",
         password="@@WEATHER_DB_PASSWORD@@",
-        port=@@WEATHER_DB_PORT@@
+        port=int("@@WEATHER_DB_PORT@@")
     )
     query = """
     SELECT
@@ -111,6 +113,32 @@ def dashboard():
         time=latest["DateTime"],
         days=days
     )
+
+
+@app.route("/reboot", methods=["POST"])
+def reboot_board():
+    trigger_path = "@@WEATHER_REBOOT_TRIGGER_PATH@@"
+
+    # Always write a trigger file so host-side automation can reboot reliably.
+    if trigger_path:
+        trigger_dir = os.path.dirname(trigger_path)
+        if trigger_dir:
+            os.makedirs(trigger_dir, exist_ok=True)
+        with open(trigger_path, "w", encoding="utf-8") as trigger_file:
+            trigger_file.write("1\n")
+
+    # Best-effort direct reboot from container.
+    result = subprocess.run(["reboot"], capture_output=True, text=True)
+    if result.returncode == 0:
+        return jsonify({"status": "ok", "message": "Reboot command executed"}), 200
+
+    return jsonify(
+        {
+            "status": "queued",
+            "message": "Reboot command failed in container, trigger file written",
+            "stderr": (result.stderr or "").strip(),
+        }
+    ), 202
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

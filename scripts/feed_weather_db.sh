@@ -44,50 +44,42 @@ insert_data() {
         "INSERT INTO $DB_TABLE (DateTime, Temperature, Humidity, Pressure) VALUES ('$_datetime', '$_temperature', '$_humidity', '$_pressure');" >/dev/null 2>&1
 }
 
-log_info "Weather feeder started"
+log_info "Weather feeder tick started"
 
-while :; do
-    if ! check_weather_station; then
-        log_error "Weather station unreachable at $WEATHER_STATION_IP"
-        sleep 60
-        continue
-    fi
+if ! check_weather_station; then
+    log_error "Weather station unreachable at $WEATHER_STATION_IP"
+    exit 1
+fi
 
-    weather_data="$(fetch_weather_data 2>/dev/null)"
-    if [ -z "$weather_data" ]; then
-        log_error "Weather station returned empty payload"
-        sleep 60
-        continue
-    fi
+weather_data="$(fetch_weather_data 2>/dev/null)"
+if [ -z "$weather_data" ]; then
+    log_error "Weather station returned empty payload"
+    exit 1
+fi
 
-    temperature="$(echo "$weather_data" | cut -d ';' -f 1)"
-    humidity="$(echo "$weather_data" | cut -d ';' -f 2)"
-    pressure="$(echo "$weather_data" | cut -d ';' -f 3)"
+temperature="$(echo "$weather_data" | cut -d ';' -f 1)"
+humidity="$(echo "$weather_data" | cut -d ';' -f 2)"
+pressure="$(echo "$weather_data" | cut -d ';' -f 3)"
 
-    if [ -z "$temperature" ] || [ -z "$humidity" ] || [ -z "$pressure" ]; then
-        log_error "Invalid sensor payload: $weather_data"
-        sleep 60
-        continue
-    fi
+if [ -z "$temperature" ] || [ -z "$humidity" ] || [ -z "$pressure" ]; then
+    log_error "Invalid sensor payload: $weather_data"
+    exit 1
+fi
 
-    if ! check_db_container; then
-        log_error "MariaDB container unavailable"
-        sleep 60
-        continue
-    fi
+if ! check_db_container; then
+    log_error "MariaDB container unavailable"
+    exit 1
+fi
 
-    datetime="$(date +'%Y-%m-%d %H:%M:%S')"
-    if ! insert_data "$datetime" "$temperature" "$humidity" "$pressure"; then
-        log_error "Failed to insert weather data"
-        sleep 60
-        continue
-    fi
+datetime="$(date +'%Y-%m-%d %H:%M:%S')"
+if ! insert_data "$datetime" "$temperature" "$humidity" "$pressure"; then
+    log_error "Failed to insert weather data"
+    exit 1
+fi
 
-    if ! update_rtc; then
-        log_warn "Failed to update weather station RTC"
-    fi
+if ! update_rtc; then
+    log_warn "Failed to update weather station RTC"
+fi
 
-    log_info "Stored weather data: T=$temperature H=$humidity P=$pressure"
-    sleep 60
-done
+log_info "Stored weather data: T=$temperature H=$humidity P=$pressure"
 

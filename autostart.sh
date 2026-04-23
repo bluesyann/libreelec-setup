@@ -102,8 +102,6 @@ else
 fi
 
 sleep 20
-launch_monitor "scripts/Restart_containers_on_error.sh" "restart_containers_on_error"
 launch_monitor "scripts/Cups_management.sh" "cups_management"
-launch_monitor "scripts/feed_weather_db.sh" "feed_weather_db"
 
 log_info "Autostart sequence completed"

@@ -60,7 +60,7 @@ Repository-managed content is intentionally limited to lightweight custom code a
 - `autostart.sh`: startup sequencing, disk readiness checks, docker stack start, monitor launch
 - `scripts/Cups_management.sh`: start/stop cups/sane based on printer presence
 - `scripts/feed_weather_db.sh`: poll weather station and insert into MariaDB every minute
-- `scripts/Restart_containers_on_error.sh`: restart navidrome on detected I/O errors
+- `scripts/restart_containers_on_error.sh`: restart navidrome on detected I/O errors
 - `scripts/update_containers.sh`: pull/redeploy stack for updates
 
 ## Logging Policy
