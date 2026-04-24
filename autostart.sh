@@ -80,6 +80,8 @@ start_compose_stack() {
 log_info "Autostart sequence started"
 sleep 30
 
+connmanctl disable wifi
+
 chmod 666 /var/run/docker.sock 2>/dev/null || true
 
 power_cycle_hdd_if_missing

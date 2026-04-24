@@ -2,12 +2,10 @@
 
 set -eu
 
-#cd .kodi/addons/
-#wget https://github.com/castagnait/repository.castagnait/raw/kodi/repository.castagnait-2.0.1.zip
-#unzip repository.castagnait-2.0.1.zip
-
-# trouver comment faire ça
-#kodi-send --action="InstallAddon(repository.castagnait)"
+wget https://github.com/castagnait/repository.castagnait/raw/kodi/repository.castagnait-2.0.1.zip
+echo "Please install repository.castagnait .zip file from the GUI"
+read -p "Press enter to continue once done"
+#unzip repository.castagnait-2.0.1.zip -d /storage/.kodi/addons
 
 wait_for_subfolder() {
     parent_folder="$1"
@@ -69,7 +67,7 @@ install_compose_binary() {
 
 # List of addons to install
 # when pc sorted, add plugin.video.netflix 
-addons="tools.ffmpeg-tools virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles resource.language.fr_fr service.system.docker"
+addons="plugin.video.netflix tools.ffmpeg-tools virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles resource.language.fr_fr service.system.docker"
 
 # Run the install
 for addon in $addons; do

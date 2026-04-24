@@ -2,6 +2,18 @@
 
 set -eu
 
+copy_required_file() {
+    _src="$1"
+    _dst="$2"
+
+    if [ -f "$_src" ]; then
+        cp "$_src" "$_dst"
+        echo "Copied $_src -> $_dst"
+    else
+        echo "Warning: missing file $_src"
+    fi
+}
+
 SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
 
 if [ -f "$SECRETS_FILE" ]; then
@@ -57,6 +69,15 @@ systemctl stop kodi
 jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$tmp_userconfig" | while IFS="$(printf '\t')" read -r id value; do
     change_xmlval "$id" "$value" "$kodifile"
 done
+
+# Replace skin settings
+copy_required_file "settings.xml" "/storage/.kodi/userdata/addon_data/skin.estuary/settings.xml"
+
+# Repalce media sources
+copy_required_file "sources.xml" "/storage/.kodi/userdata/sources.xml"
+
+# Replace CEC adapter settings (HDMI management)
+copy_required_file "sources.xml" "/storage/.kodi/userdata/cec_CEC_Adapter.xml"
 
 systemctl start kodi
 

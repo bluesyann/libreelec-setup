@@ -152,7 +152,7 @@ done
 echo "Copying top-level files"
 copy_required_file "autostart.sh" "$DESTINATION/autostart.sh"
 copy_required_file "docker-compose.yml" "$DESTINATION/docker-compose.yml"
-copy_required_file "README.md" "$DESTINATION/README.md"
+copy_required_file "/var/media/Kodi_Storage/secrets/NFAuthentication.key" "/storage/NFAuthentication.key"
 
 load_install_secrets
 render_compose_file

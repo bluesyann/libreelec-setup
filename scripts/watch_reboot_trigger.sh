@@ -12,7 +12,7 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 
 init_logger "watch_reboot_trigger"
 
-TRIG="/storage/.config/reboot_trigger"
+TRIG="/storage/.config/weather/reboot_trigger"
 
 if [ ! -f "$TRIG" ]; then
 	log_info "No reboot trigger file: $TRIG"

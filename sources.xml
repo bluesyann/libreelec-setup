@@ -1,0 +1,60 @@
+<sources>
+    <programs>
+        <default pathversion="1"></default>
+    </programs>
+    <video>
+        <default pathversion="1"></default>
+        <source>
+            <name>Videos</name>
+            <path pathversion="1">/storage/videos/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+        <source>
+            <name>TV Shows</name>
+            <path pathversion="1">/storage/tvshows/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+        <source>
+            <name>music</name>
+            <path pathversion="1">/storage/music/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+        <source>
+            <name>movies</name>
+            <path pathversion="1">/var/media/Kodi_Storage/movies/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </video>
+    <music>
+        <default pathversion="1"></default>
+        <source>
+            <name>musique lidarr</name>
+            <path pathversion="1">/media/Kodi_Storage/music/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+        <source>
+            <name>musique ordi</name>
+            <path pathversion="1">/media/Kodi_Storage/Musique/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </music>
+    <pictures>
+        <default pathversion="1"></default>
+        <source>
+            <name>Pictures</name>
+            <path pathversion="1">/storage/pictures/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </pictures>
+    <files>
+        <default pathversion="1"></default>
+        <source>
+            <name>music</name>
+            <path pathversion="1">/media/Kodi_Storage/music/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </files>
+    <games>
+        <default pathversion="1"></default>
+    </games>
+</sources>
