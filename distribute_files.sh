@@ -9,7 +9,7 @@ DEPLOY_COMPOSE_FILE="$DESTINATION/docker-compose.yml"
 DEPLOY_WEATHER_SCRIPT="$DESTINATION/scripts/feed_weather_db.sh"
 DEPLOY_APP_PY="$DESTINATION/weather/app.py"
 
-FOLDERS="weather scripts"
+FOLDERS="weather scripts convert_flac2mp3.sh"
 
 copy_required_file() {
     _src="$1"
@@ -175,5 +175,9 @@ fi
 
 echo "Updating crontabs..."
 crontab crontab.reference
+
+echo "Building flactomp3 container..."
+cd /storage/.config/flactomp3
+docker build -t flac2mp3 .
 
 echo "Distribution completed"

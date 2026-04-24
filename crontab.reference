@@ -1,7 +1,7 @@
 * * * * * /storage/.config/scripts/feed_weather_db.sh
 * * * * * /storage/.config/scripts/restart_containers_on_error.sh
 * * * * * /storage/.config/scripts/watch_reboot_trigger.sh
-0 * * * * /storage/.config/scripts/convert_dir2mp3.sh /var/media/Kodi_Storage/music flac >> /storage/.config/flac-convert.log 2>&1
+0 * * * * /storage/.kodi/addons/service.system.docker/bin/docker run --rm -v /media/Kodi_Storage/music:/music flac2mp3 /music flac >> /storage/.config/logs/flac-convert.log 2>&1
 30 3 * * 1 /storage/.config/scripts/update_containers.sh
 30 3 * * 2 /storage/.config/scripts/containers_backup.sh
 30 3 * * 3 reboot
