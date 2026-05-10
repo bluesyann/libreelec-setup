@@ -67,7 +67,7 @@ install_compose_binary() {
 
 # List of addons to install
 # when pc sorted, add plugin.video.netflix 
-addons="plugin.video.netflix tools.ffmpeg-tools virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles resource.language.fr_fr service.system.docker"
+addons="service.libraryautoupdate script.module.watchdog plugin.video.netflix virtual.network-tools plugin.video.arteplussept virtual.rpi-tools virtual.system-tools service.subtitles.opensubtitles resource.language.fr_fr service.system.docker"
 
 # Run the install
 for addon in $addons; do
