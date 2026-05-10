@@ -5,10 +5,10 @@
 
 # Manual run :
 # docker run --rm -v /var/media/Kodi_Storage/music:/dir flac2mp3 convert /dir
-# docker run --rm -v /var/media/Kodi_Storage/downloard:/dir flac2mp3 convert /dir
+# docker run --rm -v /var/media/Kodi_Storage/download:/dir flac2mp3 convert /dir
 # Cron entry (every hour):
 # 0 * * * * /storage/.kodi/addons/service.system.docker/bin/docker run --rm -v /media/Kodi_Storage/music:/dir flac2mp3 convert /dir >> /storage/.config/logs/flac-convert.log 2>&1
-# 0 * * * * /storage/.kodi/addons/service.system.docker/bin/docker run --rm -v /media/Kodi_Storage/downloads:/dir flac2mp3 split /dir >> /storage/.config/logs/flac-convert.log 2>&1
+# 0 * * * * /storage/.kodi/addons/service.system.docker/bin/docker run --rm -v /media/Kodi_Storage/downloads:/dir flac2mp3 split /dir >> /storage/.config/logs/album-split.log 2>&1
 
 DRY_RUN="${DRY_RUN:-1}"
 

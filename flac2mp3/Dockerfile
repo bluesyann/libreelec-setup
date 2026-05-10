@@ -1,7 +1,7 @@
 FROM debian:stable-slim
 
 RUN apt-get update && \
-    apt-get install -y ffmpeg cuetag shnsplit && \
+    apt-get install -y ffmpeg cuetools shntool && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /flac2mp3
