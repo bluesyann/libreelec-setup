@@ -34,18 +34,19 @@ if ! compose down; then
     exit 1
 fi
 
-if [ -d "$CONTAINERS_BACKUP" ]; then
+# Check if backup location is accessible with a timeout (HDD may be sleeping)
+if timeout 10 [ -d "$CONTAINERS_BACKUP" ]; then
     for container in $containers; do
         sourcedir="$CONTAINERS_SOURCE/$container"
         log_info "Backing up $container directory $sourcedir"
         if [ -d "$sourcedir" ]; then
-            rsync -av --delete "$sourcedir" "$CONTAINERS_BACKUP"
+            timeout 300 rsync -av --delete "$sourcedir" "$CONTAINERS_BACKUP" || log_warn "Backup of $container timed out or failed"
         else
             log_warn "$sourcedir missing"
         fi
     done
 else
-    log_warn "containers backup folder missing: $CONTAINERS_BACKUP"
+    log_warn "containers backup folder not accessible within 10 seconds (HDD may be sleeping): $CONTAINERS_BACKUP"
 fi
 
 log_info "Starting compose stack"
