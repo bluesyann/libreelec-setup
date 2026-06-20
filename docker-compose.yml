@@ -244,4 +244,20 @@ services:
       - weatherpage
       - lidarr
       - radarr
+      - homehub
     restart: unless-stopped
+
+  homehub:
+    container_name: homehub
+    image: ghcr.io/surajverma/homehub:latest
+    ports:
+      - "5000:5000" #app listens internally on port 5000
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-} # set via .env; falls back to random if not provided
+    volumes:
+      - /storage/.config/homehub/uploads:/app/uploads
+      - /storage/.config/homehub/media:/app/media
+      - /storage/.config/homehub/pdfs:/app/pdfs
+      - /storage/.config/homehub/data:/app/data
+      - /storage/.config/homehub/config.yml:/app/config.yml:ro

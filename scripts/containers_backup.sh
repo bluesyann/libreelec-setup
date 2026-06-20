@@ -16,7 +16,7 @@ init_logger "containers_backup"
 CONTAINERS_BACKUP="/var/media/Kodi_Storage/containers-backup/"
 CONTAINERS_SOURCE="$APP_ROOT"
 
-containers="cups lidarr navidrome qbittorrent syncthing joal mariadb prowlarr radarr"
+containers="cups lidarr navidrome qbittorrent syncthing joal mariadb prowlarr radarr homehub"
 
 if [ ! -f "$COMPOSE_FILE" ]; then
     log_error "docker-compose file not found at $COMPOSE_FILE"
@@ -35,6 +35,7 @@ if ! compose down; then
 fi
 
 # Check if backup location is accessible with a timeout (HDD may be sleeping)
+ls $CONTAINERS_BACKUP #this should wake up the HDD
 if timeout 10 [ -d "$CONTAINERS_BACKUP" ]; then
     for container in $containers; do
         sourcedir="$CONTAINERS_SOURCE/$container"
