@@ -247,17 +247,27 @@ services:
       - homehub
     restart: unless-stopped
 
-  homehub:
-    container_name: homehub
-    image: ghcr.io/surajverma/homehub:latest
+  yuvomi:
+    image: ghcr.io/ulsklyc/yuvomi:latest
+    build: .                          # optional: use --build to build locally instead
+    container_name: yuvomi
+    restart: unless-stopped
     ports:
-      - "5000:5000" #app listens internally on port 5000
-    environment:
-      - FLASK_ENV=production
-      - SECRET_KEY=${SECRET_KEY:-} # set via .env; falls back to random if not provided
+      - 3000:3000
     volumes:
-      - /storage/.config/homehub/uploads:/app/uploads
-      - /storage/.config/homehub/media:/app/media
-      - /storage/.config/homehub/pdfs:/app/pdfs
-      - /storage/.config/homehub/data:/app/data
-      - /storage/.config/homehub/config.yml:/app/config.yml:ro
+      - /storage/.config/yuvomi/data:/data
+      - /storage/.config/yuvomi/backups:/backups
+      - /storage/.config/yuvomi/modules:/app/modules
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/data/oikos.db
+      - BACKUP_DIR=/backups
+      - DB_ENCRYPTION_KEY=${YUVOMI_DB_ENCRYPTION_KEY}
+      - SESSION_SECRET=${YUVOMI_SESSION_SECRET}
+      - SESSION_SECURE=false
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
