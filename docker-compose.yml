@@ -21,22 +21,22 @@ services:
         target: /downloads
     restart: unless-stopped
 
-  # joal:
-  #   image: anthonyraymond/joal:latest
-  #   container_name: joal
-  #   volumes:
-  #     - type: bind
-  #       source: /storage/.config/joal
-  #       target: /data
-  #   ports:
-  #     - "6060:8080"
-  #   command:
-  #     - "--joal-conf=/data"
-  #     - "--spring.main.web-environment=true"
-  #     - "--server.port=8080"
-  #     - "--joal.ui.path.prefix=${JOAL_UI_PATH_PREFIX}"
-  #     - "--joal.ui.secret-token=${JOAL_UI_SECRET_TOKEN}"
-  #   restart: unless-stopped
+ joal:
+   image: anthonyraymond/joal:latest
+   container_name: joal
+   volumes:
+     - type: bind
+       source: /storage/.config/joal
+       target: /data
+   ports:
+     - "6060:8080"
+   command:
+     - "--joal-conf=/data"
+     - "--spring.main.web-environment=true"
+     - "--server.port=8080"
+     - "--joal.ui.path.prefix=${JOAL_UI_PATH_PREFIX}"
+     - "--joal.ui.secret-token=${JOAL_UI_SECRET_TOKEN}"
+   restart: unless-stopped
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -244,7 +244,7 @@ services:
       - weatherpage
       - lidarr
       - radarr
-      - homehub
+      - yuvomi
     restart: unless-stopped
 
   yuvomi:
@@ -271,3 +271,32 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  radicale:
+    image: tomsquest/docker-radicale
+    container_name: radicale
+    ports:
+      - 5232:5232
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - CHOWN
+      - KILL
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          pids: 50
+    healthcheck:
+      test: curl -f http://127.0.0.1:5232 || exit 1
+      interval: 30s
+      retries: 3
+    restart: unless-stopped
+    volumes:
+      - /storage/.config/radicale:/data
