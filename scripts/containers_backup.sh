@@ -36,10 +36,11 @@ fi
 
 # Wake up the hdd if it is sleeping
 dd if=/dev/sda of=/dev/null bs=512 count=1 iflag=direct
-
+sleep 10
 # Check if backup location is accessible
 if [ -d "$CONTAINERS_BACKUP" ]; then
     for container in $containers; do
+        sleep 5
         sourcedir="$CONTAINERS_SOURCE/$container"
         log_info "Backing up $container directory $sourcedir"
         if [ -d "$sourcedir" ]; then
