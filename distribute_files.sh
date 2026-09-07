@@ -4,7 +4,7 @@ set -eu
 
 DESTINATION="/storage/.config"
 CONTAINERS_BACKUP="/var/media/Kodi_Storage/containers-backup"
-HDD_SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
+HDD_SECRETS_FILE="/var/media/Kodi_Storage/containers-backup/secrets/libreelec.env"
 DEPLOY_COMPOSE_FILE="$DESTINATION/docker-compose.yml"
 DEPLOY_WEATHER_SCRIPT="$DESTINATION/scripts/feed_weather_db.sh"
 DEPLOY_APP_PY="$DESTINATION/weather/app.py"
@@ -44,7 +44,7 @@ compose_bin() {
 load_install_secrets() {
     if [ ! -f "$HDD_SECRETS_FILE" ]; then
         echo "Error: secrets file not found: $HDD_SECRETS_FILE"
-        echo "Create /var/media/Kodi_Storage/secrets/libreelec.env before running distribute_files.sh"
+        echo "Create /var/media/Kodi_Storage/containers-backup/secrets/libreelec.env before running distribute_files.sh"
         exit 1
     fi
 
@@ -152,7 +152,7 @@ done
 echo "Copying top-level files"
 copy_required_file "autostart.sh" "$DESTINATION/autostart.sh"
 copy_required_file "docker-compose.yml" "$DESTINATION/docker-compose.yml"
-copy_required_file "/var/media/Kodi_Storage/secrets/NFAuthentication.key" "/storage/NFAuthentication.key"
+copy_required_file "/var/media/Kodi_Storage/containers-backup/secrets/NFAuthentication.key" "/storage/NFAuthentication.key"
 
 load_install_secrets
 render_compose_file

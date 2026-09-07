@@ -14,7 +14,7 @@ copy_required_file() {
     fi
 }
 
-SECRETS_FILE="/var/media/Kodi_Storage/secrets/libreelec.env"
+SECRETS_FILE="/var/media/Kodi_Storage/containers-backup/secrets/libreelec.env"
 
 if [ -f "$SECRETS_FILE" ]; then
     # shellcheck disable=SC1090

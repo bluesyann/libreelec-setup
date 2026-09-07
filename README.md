@@ -38,7 +38,7 @@ Only lightweight custom code remains in git: `weather`, `scripts`, plus top-leve
 
 Secrets are not stored in tracked files.
 
-1. Create `/var/media/Kodi_Storage/secrets/libreelec.env` with all required values (see `secrets/libreelec.env.example`).
+1. Create `/var/media/Kodi_Storage/containers-backup/secrets/libreelec.env` with all required values (see `secrets/libreelec.env.example`).
 2. Run `./distribute_files.sh`.
 3. `distribute_files.sh` restores backups from `/var/media/Kodi_Storage/containers-backup`, then renders secrets directly into production files (`/storage/.config/docker-compose.yml` and `/storage/.config/scripts/feed_weather_db.sh`).
 4. Run `./kodi_settings.sh` to apply Kodi web server credentials and GUI settings.

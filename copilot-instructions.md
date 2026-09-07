@@ -74,10 +74,10 @@ Repository-managed content is intentionally limited to lightweight custom code a
 Secrets must never be hardcoded in tracked files.
 
 - Template: `secrets/libreelec.env.example`
-- Source before install: `/var/media/Kodi_Storage/secrets/libreelec.env` (on data drive, not tracked)
+- Source before install: `/var/media/Kodi_Storage/containers-backup/secrets/libreelec.env` (on data drive, not tracked)
 - `docker-compose.yml` must use environment interpolation for secrets and credentials
 
-`distribute_files.sh` reads `/var/media/Kodi_Storage/secrets/libreelec.env` directly and renders secrets into production files in `/storage/.config`.
+`distribute_files.sh` reads `/var/media/Kodi_Storage/containers-backup/secrets/libreelec.env` directly and renders secrets into production files in `/storage/.config`.
 
 If a token/password appears in repository content, move it to env-based configuration and treat it as exposed.
 

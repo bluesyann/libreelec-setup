@@ -162,6 +162,9 @@ services:
         source: /var/media/Kodi_Storage/Musique
         target: /Musique
       - type: bind
+        source: /var/media/Kodi_Storage/containers-backup
+        target: /containers-backup
+      - type: bind
         source: /storage
         target: /storage
     ports:
