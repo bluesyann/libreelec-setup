@@ -16,7 +16,7 @@ init_logger "containers_backup"
 CONTAINERS_BACKUP="/var/media/Kodi_Storage/containers-backup/"
 CONTAINERS_SOURCE="$APP_ROOT"
 
-containers="cups lidarr navidrome qbittorrent syncthing joal mariadb prowlarr radarr yuvomi radicale"
+containers="cups lidarr navidrome qbittorrent syncthing joal mariadb prowlarr radarr sonarr yuvomi radicale"
 
 if [ ! -f "$COMPOSE_FILE" ]; then
     log_error "docker-compose file not found at $COMPOSE_FILE"
