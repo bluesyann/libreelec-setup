@@ -28,6 +28,11 @@ if ! compose_bin >/dev/null 2>&1; then
     exit 1
 fi
 
+if ! command -v rsync >/dev/null 2>&1; then
+    log_error "rsync binary not found in PATH: $PATH"
+    exit 1
+fi
+
 log_info "Stopping compose stack"
 if ! compose down; then
     log_error "Failed to stop compose stack"
