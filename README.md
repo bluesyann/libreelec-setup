@@ -24,14 +24,16 @@ This setup orchestrates:
 - `autostart.sh`: startup orchestrator run by LibreELEC
 - `docker-compose.yml`: container stack definition
 - `install_addons.sh`: Kodi add-on install + docker-compose binary download
-- `distribute_files.sh`: deploys repo content to `/storage/.config`, restores container backups, and renders final runtime files
+- `distribute_files.sh`: deploys repo content to `/storage/.config` and renders final runtime files
+- `scripts/containers_backup.sh`: snapshots container data to the external backup drive
+- `restore_container_backup.sh`: restores a saved container backup for a new install
 - `kodi_settings.sh`: applies settings from `user_config.json` into Kodi XML
 - `scripts/lib/common.sh`: shared runtime helpers (compose path)
 - `scripts/lib/logging.sh`: shared logging helpers for all background shell scripts
 - `scripts/*.sh`: long-running monitors/maintenance scripts
 - `secrets/libreelec.env.example`: template of required secret values
 
-Full container backups are stored outside the repository in `/var/media/Kodi_Storage/containers-backup` and restored by `distribute_files.sh`.
+Full container backups are stored outside the repository in `/var/media/Kodi_Storage/containers-backup` and created weekly by `scripts/containers_backup.sh`. Restore one for a new install with `restore_container_backup.sh`; deployment does not restore backups.
 Only lightweight custom code remains in git: `weather`, `scripts`, plus top-level orchestration files.
 
 ## Secret Management
@@ -40,7 +42,7 @@ Secrets are not stored in tracked files.
 
 1. Create `/var/media/Kodi_Storage/containers-backup/secrets/libreelec.env` with all required values (see `secrets/libreelec.env.example`).
 2. Run `./distribute_files.sh`.
-3. `distribute_files.sh` restores backups from `/var/media/Kodi_Storage/containers-backup`, then renders secrets directly into production files (`/storage/.config/docker-compose.yml` and `/storage/.config/scripts/feed_weather_db.sh`).
+3. `distribute_files.sh` deploys repository-managed files and renders secrets directly into production files (`/storage/.config/docker-compose.yml` and `/storage/.config/scripts/feed_weather_db.sh`).
 4. Run `./kodi_settings.sh` to apply Kodi web server credentials and GUI settings.
 
 Runtime does not depend on a `.env` file.
@@ -83,6 +85,7 @@ Then run, in order:
 
 ```sh
 ./install_addons.sh
+./restore_container_backup.sh  # only when restoring a saved install
 ./distribute_files.sh
 ./kodi_settings.sh
 ```

@@ -58,6 +58,8 @@ Repository-managed content is intentionally limited to lightweight custom code a
 ## Script Responsibilities
 
 - `autostart.sh`: startup sequencing, disk readiness checks, docker stack start, monitor launch
+- `restore_container_backup.sh`: restore saved container data on a new install
+- `scripts/containers_backup.sh`: create the scheduled container backup on the production system
 - `scripts/Cups_management.sh`: start/stop cups/sane based on printer presence
 - `scripts/feed_weather_db.sh`: poll weather station and insert into MariaDB every minute
 - `scripts/restart_containers_on_error.sh`: restart navidrome on detected I/O errors
@@ -89,11 +91,12 @@ Expected first-run sequence on a new SD card:
 2. Boot once, configure network + enable SSH
 3. Clone this repository on the device
 4. Run `./install_addons.sh`
-5. Run `./distribute_files.sh`
-6. Run `./kodi_settings.sh`
-7. Confirm Kodi add-on prompts manually in GUI when required
+5. Optionally run `./restore_container_backup.sh` to restore saved container data
+6. Run `./distribute_files.sh` to deploy repository files
+7. Run `./kodi_settings.sh`
+8. Confirm Kodi add-on prompts manually in GUI when required
 
-`distribute_files.sh` restores `/var/media/Kodi_Storage/containers-backup` into `/storage/.config`, copies repository-managed files (`weather`, `scripts`, `autostart.sh`, `docker-compose.yml`), and renders secrets directly into final runtime files.
+`distribute_files.sh` only deploys repository-managed files (`weather`, `scripts`, `autostart.sh`, `docker-compose.yml`) and renders secrets directly into final runtime files. `restore_container_backup.sh` restores the latest saved backup only when requested for a new install. `scripts/containers_backup.sh` independently creates the scheduled production backups.
 
 Manual confirmation in Kodi is expected and accepted.
 

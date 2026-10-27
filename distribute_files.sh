@@ -3,7 +3,6 @@
 set -eu
 
 DESTINATION="/storage/.config"
-CONTAINERS_BACKUP="/var/media/Kodi_Storage/containers-backup"
 HDD_SECRETS_FILE="/var/media/Kodi_Storage/containers-backup/secrets/libreelec.env"
 DEPLOY_COMPOSE_FILE="$DESTINATION/docker-compose.yml"
 DEPLOY_WEATHER_SCRIPT="$DESTINATION/scripts/feed_weather_db.sh"
@@ -128,13 +127,6 @@ render_app_py() {
 if [ ! -d "$DESTINATION" ]; then
     echo "Error: destination folder missing: $DESTINATION"
     exit 1
-fi
-
-if [ -d "$CONTAINERS_BACKUP" ]; then
-    echo "Copying containers backups from $CONTAINERS_BACKUP"
-    rsync -av "$CONTAINERS_BACKUP"/ "$DESTINATION/"
-else
-    echo "Warning: containers backup folder missing: $CONTAINERS_BACKUP"
 fi
 
 echo "Copying repository folders to $DESTINATION"
