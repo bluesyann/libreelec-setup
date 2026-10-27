@@ -37,11 +37,17 @@
             </div>
         </form>
         <div class="row mb-3">
-            <div class="col-md-4 offset-md-4 text-center">
+            <div class="col-md-4 offset-md-2 text-center">
                 <button id="reboot-btn" type="button" class="btn btn-danger w-100" style="font-size: 1.1rem; font-weight: 700;">
                     Reboot system
                 </button>
                 <div id="reboot-status" class="small mt-2"></div>
+            </div>
+            <div class="col-md-4 text-center">
+                <button id="wakeup-btn" type="button" class="btn btn-success w-100" style="font-size: 1.1rem; font-weight: 700;">
+                    Wake computer
+                </button>
+                <div id="wakeup-status" class="small mt-2"></div>
             </div>
         </div>
         <div class="row">
@@ -80,6 +86,8 @@
     <script>
         const rebootBtn = document.getElementById('reboot-btn');
         const rebootStatus = document.getElementById('reboot-status');
+        const wakeupBtn = document.getElementById('wakeup-btn');
+        const wakeupStatus = document.getElementById('wakeup-status');
 
         rebootBtn.addEventListener('click', async () => {
             if (!confirm('Reboot system?')) {
@@ -104,6 +112,27 @@
                 setTimeout(() => {
                     rebootBtn.disabled = false;
                 }, 5000);
+            }
+        });
+
+        wakeupBtn.addEventListener('click', async () => {
+            if (!confirm('Send a wakeup request to the computer?')) {
+                return;
+            }
+
+            wakeupBtn.disabled = true;
+            wakeupStatus.textContent = 'Demande en cours...';
+
+            try {
+                const response = await fetch('/wakeup', { method: 'POST' });
+                const data = await response.json();
+                wakeupStatus.textContent = data.message || 'Commande envoyee.';
+            } catch (error) {
+                wakeupStatus.textContent = 'Echec de la demande de reveil.';
+            } finally {
+                setTimeout(() => {
+                    wakeupBtn.disabled = false;
+                }, 3000);
             }
         });
     </script>

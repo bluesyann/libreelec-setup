@@ -249,6 +249,7 @@ services:
       WEATHER_DB_USER: ${WEATHER_DB_USER:-root}
       WEATHER_DB_PASSWORD: ${WEATHER_DB_PASSWORD}
       WEATHER_DB_PORT: 3306
+      WAKEUP_PICO_URL: ${WAKEUP_PICO_URL:-}
     ports:
       - "8181:5000"
     depends_on:
@@ -268,6 +269,7 @@ services:
       - radarr
       - sonarr
       - yuvomi
+      - rustguac
     restart: unless-stopped
 
   yuvomi:
@@ -323,3 +325,16 @@ services:
     restart: unless-stopped
     volumes:
       - /storage/.config/radicale:/data
+
+  rustguac:
+    container_name: rustguac
+    image: sol1/rustguac:latest
+    ports:
+      - "8089:8089"
+    volumes:
+      - /storage/.config/rustguac/config.toml:/opt/rustguac/config.toml
+      - /storage/.config/rustguac/rustguac-data:/opt/rustguac/data
+      - /storage/.config/rustguac/rustguac-recordings:/opt/rustguac/recordings
+    environment:
+      - RUST_LOG=info
+    restart: unless-stopped

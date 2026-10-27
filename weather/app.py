@@ -5,9 +5,12 @@ import pandas as pd
 import scipy
 import os
 import subprocess
+from urllib.error import URLError
+from urllib.request import urlopen
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
+WAKEUP_PICO_URL = os.environ.get("WAKEUP_PICO_URL", "").strip()
 
 def get_weather_data(days=3):
     end = datetime.now()
@@ -169,6 +172,22 @@ def reboot_board():
             return jsonify({"status": "error", "message": "Trigger file not written"}), 500
     else:
         return jsonify({"status": "error", "message": "Trigger file path undefined"}), 500
+
+
+@app.route("/wakeup", methods=["POST"])
+def wakeup_computer():
+    if not WAKEUP_PICO_URL:
+        return jsonify({"status": "error", "message": "Pico wake URL is not configured"}), 503
+
+    try:
+        with urlopen(WAKEUP_PICO_URL, timeout=5) as response:
+            if response.status < 200 or response.status >= 300:
+                raise URLError("Pico returned HTTP {}".format(response.status))
+    except (OSError, URLError, ValueError) as exc:
+        app.logger.warning("Pico wake request failed: %s", exc)
+        return jsonify({"status": "error", "message": "Could not reach the Pico wake service"}), 502
+
+    return jsonify({"status": "sent", "message": "Wakeup request sent to the Pico"}), 200
 
 
 if __name__ == "__main__":
