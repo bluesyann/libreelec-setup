@@ -21,7 +21,7 @@ services:
         target: /downloads
     restart: unless-stopped
 
- joal:
+  joal:
    image: anthonyraymond/joal:latest
    container_name: joal
    volumes:
