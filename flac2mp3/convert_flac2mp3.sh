@@ -111,7 +111,12 @@ split_on_cue_and_convert(){
         log "Found $cue"
         audio="${cue%.cue}.flac"
         flag="${cue%.cue}.processed"
-        
+
+        # Prefer FLAC, falling back to Monkey's Audio with the same basename.
+        if [ ! -f "$audio" ]; then
+            audio="${cue%.cue}.ape"
+        fi
+
         if [ -f "$flag" ]; then
             log "This .cue has already been processed"
             continue
